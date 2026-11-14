@@ -1,0 +1,66 @@
+{
+  "results": [
+    "All five portraits and four resource PNGs load with transparent corners; correct speakers and keyboard dialogue remain functional",
+    "Normal-motion central road crossing: 17.46 scene units/sec, safe walls/platform, correct arrival, indoor gait and live resize; no resource effects",
+    "Crew and Scout follow real combined-expedition routes without crossing building collision footprints",
+    "Minimized HUD preserves current objective, low-resource warning access and mode across dialogs",
+    "Deliberately missing primary PNGs load matching SVG fallbacks; missing primary and fallback render a readable placeholder without crashing"
+  ],
+  "assets": [
+    {
+      "path": "characters/bai/portrait",
+      "width": 1000,
+      "height": 1000,
+      "cornerAlpha": 0
+    },
+    {
+      "path": "characters/captain-kiki/portrait",
+      "width": 1000,
+      "height": 1000,
+      "cornerAlpha": 0
+    },
+    {
+      "path": "characters/dr-kofi/portrait",
+      "width": 1000,
+      "height": 1000,
+      "cornerAlpha": 0
+    },
+    {
+      "path": "characters/menemo/portrait",
+      "width": 1000,
+      "height": 1000,
+      "cornerAlpha": 0
+    },
+    {
+      "path": "characters/dr-olef/portrait",
+      "width": 1000,
+      "height": 1000,
+      "cornerAlpha": 0
+    },
+    {
+      "path": "resources/energy",
+      "width": 1254,
+      "height": 1254,
+      "cornerAlpha": 0
+    },
+    {
+      "path": "resources/oxygen",
+      "width": 1254,
+      "height": 1254,
+      "cornerAlpha": 0
+    },
+    {
+      "path": "resources/water",
+      "width": 1254,
+      "height": 1254,
+      "cornerAlpha": 0
+    },
+    {
+      "path": "resources/food",
+      "width": 1254,
+      "height": 1254,
+      "cornerAlpha": 0
+    }
+  ],
+  "errors": []
+}

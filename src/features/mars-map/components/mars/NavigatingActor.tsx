@@ -1,7 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
-import { advanceRoute, distance, findRoute, type NavigationMesh, type NavigationRequest, type Point } from '../../navigation/navigation'
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
+import { advanceRoute, distance, findRoute, nearestPoint, type NavigationMesh, type NavigationRequest, type Point } from '../../navigation/navigation'
 import { ExpeditionMarker } from './ExpeditionMarker'
 import './navigation.css'
+import { MOVEMENT_CONFIG } from '../../navigation/movementConfig'
+
+const cadenceStyle={'--eva-step-duration':`${MOVEMENT_CONFIG.cadence.eva}s`,'--indoor-step-duration':`${MOVEMENT_CONFIG.cadence.indoor}s`,'--footstep-duration':`${MOVEMENT_CONFIG.cadence.feet}s`,'--wheel-duration':`${MOVEMENT_CONFIG.cadence.wheels}s`} as CSSProperties
 
 export function NavigatingActor({ request, mesh, initial, indoor = false, active = true, reducedMotion = false, onArrive, onBlocked, visible = true }: {
   request?: NavigationRequest; mesh: NavigationMesh; initial: Point; indoor?: boolean; active?: boolean; reducedMotion?: boolean;
@@ -20,7 +23,7 @@ export function NavigatingActor({ request, mesh, initial, indoor = false, active
   useEffect(() => { callbacks.current = { onArrive, onBlocked } }, [onArrive, onBlocked])
   // State changes mark animation boundaries only; frame positions stay in refs/DOM.
   /* oxlint-disable react/set-state-in-effect */
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!request || !active || !visible) return
     if (arrived.current === request.id) {
       const cue = `${request.id}:${request.activity ?? 'idle'}`
@@ -37,6 +40,7 @@ export function NavigatingActor({ request, mesh, initial, indoor = false, active
       actorPositions.current[currentKind.current] = position.current
       position.current = actorPositions.current[requestedKind]
       currentKind.current = requestedKind
+      element.dataset.kind=requestedKind
       element.style.left = `${position.current.x}%`; element.style.top = `${position.current.y}%`
     }
     const route = findRoute(position.current, request.point, mesh)
@@ -45,9 +49,14 @@ export function NavigatingActor({ request, mesh, initial, indoor = false, active
     const isRover = request.kind === 'rover'
     setState(!indoor && !isRover ? 'airlock' : 'turning')
     let frame = 0, index = 1, followerIndex = 1, previous = 0, elapsed = 0, cancelled = false, restTimer = 0
-    const followerRoute = request.companion ? [...findRoute(followerPosition.current, position.current, mesh), ...route.slice(1)] : []
+    if(request.companion&&request.companionKind==='rover')followerPosition.current={...actorPositions.current.rover}
+    const companionTarget=nearestPoint({x:route.at(-1)!.x,y:route.at(-1)!.y+6},mesh)
+    const followerRoute=request.companion&&companionTarget?findRoute(followerPosition.current,companionTarget,mesh):[]
+    if(request.companion&&!followerRoute.length){setState('waiting');callbacks.current.onBlocked?.();return}
+    place(follower.current,followerPosition.current,facing.current)
     const totalLength = route.reduce((total, p, i) => i ? total + Math.hypot(p.x-route[i-1].x, (p.y-route[i-1].y)*mesh.aspect) : 0, 0)
-    const speed = reducedMotion ? Math.max(15, totalLength / .35) : indoor ? 20 : isRover ? 22 : 14
+    const followerLength=followerRoute.reduce((sum,point,index)=>index?sum+distance(followerRoute[index-1],point,mesh.aspect):sum,0)
+    const speed = reducedMotion ? Math.max(MOVEMENT_CONFIG.outdoorSpeed, Math.max(totalLength,followerLength) / MOVEMENT_CONFIG.reducedMotionTravelSeconds) : indoor ? MOVEMENT_CONFIG.indoorSpeed : isRover ? MOVEMENT_CONFIG.roverSpeed : MOVEMENT_CONFIG.outdoorSpeed
     function place(node: HTMLDivElement | null, p: Point, facing: number) {
       if (!node) return
       node.style.left = `${p.x}%`; node.style.top = `${p.y}%`
@@ -78,6 +87,7 @@ export function NavigatingActor({ request, mesh, initial, indoor = false, active
       if (request!.companion && elapsed > (reducedMotion ? .08 : .55) && (!result.arrived || separated)) {
         const following = advanceRoute(followerPosition.current, followerRoute, followerIndex, dt, speed, mesh.aspect)
         followerPosition.current = following.position; followerIndex = following.index
+        if(request!.companionKind==='rover')actorPositions.current.rover=following.position
         place(follower.current, following.position, following.facing || facing.current)
       }
       if (result.arrived && (!request!.companion || !separated || followerIndex >= followerRoute.length)) { finish(); return }
@@ -89,11 +99,11 @@ export function NavigatingActor({ request, mesh, initial, indoor = false, active
   /* oxlint-enable react/set-state-in-effect */
   return <>
     {request && ['airlock','turning','walking'].includes(state) && active && <span className="destination-ring" style={{ left: `${request.point.x}%`, top: `${request.point.y}%` }} aria-hidden="true">⌖</span>}
-    <div ref={actor} hidden={!visible} className={`nav-actor ${indoor ? 'nav-indoor' : 'nav-outdoor'} nav-${state} nav-${kind}${reducedMotion ? ' nav-still' : ''}`} data-motion={state} data-kind={kind} style={{ left: `${initial.x}%`, top: `${initial.y}%` }}>
+    <div ref={actor} hidden={!visible} className={`nav-actor ${indoor ? 'nav-indoor' : 'nav-outdoor'} nav-${state} nav-${kind}${reducedMotion ? ' nav-still' : ''}`} data-motion={state} data-kind={kind} style={{...cadenceStyle, left: `${initial.x}%`, top: `${initial.y}%` }}>
       <span className="nav-shadow"/><span className="nav-body"><ExpeditionMarker kind={kind}/></span>
       <span className="nav-label">{state === 'airlock' ? 'Airlock · suit check' : kind === 'rover' ? 'Scout' : indoor ? 'Captain Kiki' : 'Kiki · EVA suit'}</span>
       {['working', 'scanning', 'sampling'].includes(state) && <span className="nav-tool" aria-hidden="true">✧</span>}
     </div>
-    <div ref={follower} hidden={!request?.companion || !visible} className={`nav-actor nav-companion nav-${state} nav-${request?.companionKind ?? 'astronaut'}`} style={{ left: `${initial.x}%`, top: `${initial.y + 10}%` }} aria-label={request?.companionKind === 'rover' ? 'Assigned rover following' : 'Assigned crew following'}><span className="nav-body"><ExpeditionMarker kind={request?.companionKind ?? 'astronaut'}/></span></div>
+    <div ref={follower} hidden={!request?.companion || !visible} className={`nav-actor nav-companion ${indoor?'nav-indoor':'nav-outdoor'} nav-${state} nav-${request?.companionKind ?? 'astronaut'}`} style={{...cadenceStyle, left: `${initial.x}%`, top: `${initial.y + 10}%` }} aria-label={request?.companionKind === 'rover' ? 'Assigned rover following' : 'Assigned crew following'}><span className="nav-body"><ExpeditionMarker kind={request?.companionKind ?? 'astronaut'}/></span></div>
   </>
 }

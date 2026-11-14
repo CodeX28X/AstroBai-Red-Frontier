@@ -3,7 +3,7 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { createServer } from 'vite'
 import { decodeSave } from '../src/shared/store/saveGame.ts'
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE ?? 'playwright')
-const output='docs/qa/gameplay-fixes'
+const output=process.env.QA_OUTPUT??'docs/qa/gameplay-fixes'
 await mkdir(output,{recursive:true})
 const server=await createServer({server:{host:'127.0.0.1',port:4188,strictPort:true}});await server.listen()
 const browser=await chromium.launch({channel:process.env.QA_BROWSER??'chrome',headless:true,env:{...process.env,SSLKEYLOGFILE:''}})
@@ -44,7 +44,8 @@ async function fits(width,height){
   const targets=await page.locator('.mars-facility').evaluateAll(nodes=>nodes.filter(node=>{const r=node.getBoundingClientRect();const hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return !hit||!node.contains(hit)}).map(node=>node.getAttribute('aria-label')))
   assert.deepEqual(targets,[],`${width}: facility centers obscured`)
   const header=await page.locator('.adventure-hud').boundingBox(),objective=await page.locator('.adventure-objective').boundingBox();assert.ok(header.y+header.height<=objective.y,`${width}: header/objective overlap`)
-  await shot(`expanded-${width}`);await b('Minimize HUD').click();assert.equal(await b('Expand HUD').getAttribute('aria-expanded'),'false');assert.ok(!(await page.locator('.adventure-objective').isVisible()));await hud();await shot(`minimized-${width}`)
+  const footprint=()=>page.evaluate(()=>['.adventure-hud','.hud-objective-stack','.adventure-dialogue','.adventure-toolbar'].reduce((area,selector)=>{const box=document.querySelector(selector).getBoundingClientRect();return area+box.width*box.height},0))
+  const expanded=await footprint();await shot(`expanded-${width}`);await b('Minimize HUD').click();assert.equal(await b('Expand HUD').getAttribute('aria-expanded'),'false');assert.ok(!(await page.locator('.adventure-objective').isVisible()));assert.ok(await page.getByRole('button',{name:/Current objective:/}).isVisible());assert.ok(await footprint()<expanded*.7,`${width}: minimized HUD footprint`);await hud();await shot(`minimized-${width}`)
   await page.getByRole('progressbar',{name:'Energy reserve'}).locator('..').click();await close();assert.ok(await b('Expand HUD').isVisible());await b('Expand HUD').click();assert.ok(await page.locator('.adventure-objective').isVisible());results.push(`${width}×${height}: compact/minimized HUD, values/bars, restore and accessible targets`)
 }
 try{
@@ -64,12 +65,16 @@ try{
   await b('Research sites').click();assert.ok(await b('Explore Lumen Shelf').isDisabled());assert.ok(await b('Explore Cinder Flats').isDisabled());assert.ok(await b('Explore Echo Ridge').isEnabled());await shot('site-progress');await close()
   const snapshot=await state();await page.reload();await b('Continue Mission').click();assert.deepEqual(await state(),snapshot)
   await b('Finish Sol 10 →').click();await b('Finish the outpost mission').click();await b('Mission debrief →').click();assert.equal((await state()).outcome,'success');assert.equal((await state()).icebound.samples.length,2);await shot('debrief')
+  assert.ok(await page.getByRole('heading',{name:'Mission Complete!',exact:true}).isVisible());assert.ok(await page.locator('.ending-bai img[src="/assets/characters/bai/portrait.png"]').isVisible())
+  for(const [width,height]of [[1366,768],[1920,1080],[1024,768],[390,844]]){await page.setViewportSize({width,height});for(const name of ['Play Again','View Mission Report','Main Menu']){const box=await b(name).boundingBox();assert.ok(box.y>=0&&box.y+box.height<=height&&box.x>=0&&box.x+box.width<=width)}assert.ok(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight));if(width===1366)assert.ok(await page.locator('.ending-body').evaluate(node=>node.scrollHeight<=node.clientHeight));await shot(`ending-${width}`)}
+  await page.setViewportSize({width:1366,height:768});await b('View Mission Report').click();assert.ok(await page.getByRole('dialog',{name:'Mission report',exact:true}).isVisible());assert.match(await page.getByRole('dialog').innerText(),/No Ice Found Here/);await shot('optional-mission-report');await close()
   results.push('Actual facility click, all four production jobs, once-per-sol lock, one-job cost and immediate HUD updates')
   results.push('Default supplies: two sites, selected optional tool persistence, distinct deterministic findings, retained first report, completed-site locks, daily use, reload and ten-sol success')
-  await b('Play again').click();await b('Start new adventure').click();await b('Check with Mission Control').click();await b('Confirm cargo').click();await b('Go to launch →').click();await b('Launch our rocket →').click();await b('Approach Mars →').click();await page.getByRole('button',{name:/Choose a Safe Landing Spot/}).click()
+  await b('Play Again').click();await b('Start new adventure').click();await b('Check with Mission Control').click();await b('Confirm cargo').click();await b('Go to launch →').click();await b('Launch our rocket →').click();await b('Approach Mars →').click();await page.getByRole('button',{name:/Choose a Safe Landing Spot/}).click()
   for(let n=0;n<4;n++){await b('End sol →').click();await page.getByRole('dialog').getByRole('button',{name:'Rest until next sol',exact:true}).click()}
-  assert.equal((await state()).outcome,'failure');assert.equal((await state()).resources.power,0);await hud();await b('Mission debrief').click();assert.ok(await page.getByRole('heading',{name:'Every adventure teaches us.'}).isVisible());await shot('supply-failure')
+  assert.equal((await state()).outcome,'failure');assert.equal((await state()).resources.power,0);await hud();await b('Mission debrief').click();assert.ok(await page.getByRole('heading',{name:"Let's Try Again!"}).isVisible());await shot('supply-failure')
   results.push('Restart, ignored upkeep, natural resource depletion and failure debrief verified')
+  results.push('Summary-first success/failure endings, actual resources/science, BAI artwork, optional full report and visible replay/menu controls at all four viewports')
   assert.deepEqual(errors,[]);await writeFile(`${output}/browser-results.json`,JSON.stringify({results,errors},null,2)+'\n');console.log(JSON.stringify({results,errors},null,2))
 }catch(error){await shot('failure');console.error((await page.locator('body').innerText()).slice(-4500));throw error}
 finally{await browser.close();await server.close()}

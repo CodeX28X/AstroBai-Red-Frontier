@@ -16,6 +16,8 @@ Exploration fills the viewport with an overlay HUD and portrait dialogue. The fo
 
 Each sol now consumes 1 of each resource. Use one-job facility actions to collect 5 Energy or replenish 4 Oxygen, Water or Food (the latter three cost 1 Energy). Operations run once per sol. Record a research site's report to unlock other locations; earlier samples and reports remain saved. The HUD can be minimized and restored. See [the gameplay-fixes report](docs/gameplay-fixes-report.md) for balancing, validation and save compatibility. Power allocation, repairs and storm-response events remain outside this change.
 
+The latest presentation pass integrates the supplied character/resource PNGs, adds matching image fallbacks, opens safe routes across the central road and increases travel speed by 25%. The compact HUD keeps objective and warning access when minimized. Mission endings show a short BAI summary with replay controls and an optional full report. See [the pixel-assets and UI report](docs/pixel-assets-report.md) for asset mappings, navigation details and browser evidence. Gameplay balance and scientific rules are unchanged.
+
 ## Requirements
 
 - Node.js compatible with the installed Vite version

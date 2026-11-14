@@ -1,5 +1,9 @@
 ﻿# Integration contract
 
+## Pixel assets and presentation — 2026-11-15
+
+This request changes presentation/navigation only. Shared asset definitions and a reusable image fallback component feed A/B surfaces; resource and equipment identifiers remain existing domain IDs. Five supplied PNG portraits replace their labeled SVG placeholders; Scout/Earth keep matching placeholders. Four supplied resource PNGs are used throughout presentation with existing supply SVG fallbacks. No equipment art is present, so no filenames/items are invented. B aligns building ground collision footprints with the drawn pads, retains the solid flag platform and other obstacles, shares facility approach points, rejects disconnected starts, and raises configured travel speed/cadence by 25%. A adds compact objective/warning access in both HUD modes and a summary-first ending derived from actual outcome/completed sols/resources/science, with existing reports optional. C/D simulation, save schema, progression, scientific findings and all balancing remain unchanged. QA covers actual normal-motion road crossings and resized layouts. This records interfaces and scope; it does not claim independent owner review.
+
 ## Gameplay fixes — 2026-11-15
 
 The five-fix request authorizes production and daily consumption. C owns pure `features/simulation` rules and atomic reducer commits: daily consumption is 1 of each resource, no passive generation; manual solar collection yields 5 Energy, habitat life support yields 4 Oxygen or 4 Water for 1 Energy, and the existing greenhouse yields 4 Food for 1 Energy. Each operation uses one job, once per sol. Standard solar/greenhouse systems are commissioned explicitly; no optional cargo is granted. Zero after daily consumption ends the mission in failure; unaffordable advances end it without deductions. Expected sol/resource revision reject stale clicks; consumed-sol records prevent replay. Existing terminal guards remain.

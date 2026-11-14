@@ -90,8 +90,8 @@ test('inspection and conversation persistence are free, duplicate-safe and reset
   assert.deepEqual(decodeSave(encodeSave(run.actions)).state.guidance,run.state.guidance)
   assert.deepEqual(gameReducer(run.state,{type:'RESET_GAME'}).guidance,{inspections:[],completedDialogueIds:[]})
 })
-test('portrait slots are labeled local vectors and dialogue debounces repeated clicks',()=>{
-  for(const [id,c] of Object.entries(CHARACTERS)){assert.ok(existsSync(`public${c.portrait}`));assert.match(readFileSync(`public${c.portrait}`,'utf8'),/portrait placeholder/);assert.ok(c.name);assert.ok(id)}
+test('portrait slots use approved assets and labeled fallbacks; dialogue debounces repeated clicks',()=>{
+  for(const [id,c] of Object.entries(CHARACTERS)){assert.ok(existsSync(`public${c.portrait}`));assert.match(readFileSync(`public${c.fallbackPortrait}`,'utf8'),/portrait placeholder/);assert.ok(c.name);assert.ok(id)}
   assert.notEqual(CHARACTERS.bai.portrait,CHARACTERS.kiki.portrait)
   const g=adventureDirector({...prepared().state,phase:'outpost',sol:1})
   assert.deepEqual(guideDialogue(g).map(b=>b.speakerId),['bai','kiki'])

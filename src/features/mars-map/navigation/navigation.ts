@@ -1,3 +1,5 @@
+import { marsLocations } from '../data/marsLocations.ts'
+import type { FacilityId } from '../types/marsMap.ts'
 /** Drawing coordinates (0..100); no gameplay state or resource effects. */
 export interface Point { x: number; y: number }
 let navigationSequence = 0
@@ -12,10 +14,16 @@ export interface NavigationRequest {
   companionKind?: 'astronaut' | 'rover'
   activity?: 'inspecting' | 'working' | 'scanning' | 'sampling' | 'waiting'
 }
+/** Ground pads in MarsTerrain are ~15.6% wide and 13.4% tall. Include a small wall clearance. */
+export const FACILITY_FOOTPRINTS = marsLocations.map(({position:{x,y}})=>({left:x-8.5,right:x+8.5,top:y-9,bottom:y+7.5}))
+export function facilityApproachPoint(id:FacilityId):Point {
+  const location=marsLocations.find(location=>location.id===id)!
+  return {x:location.position.x,y:location.position.y<50?42:78}
+}
 export const SURFACE_MESH: NavigationMesh = {
   bounds: { left: 6, top: 15, right: 94, bottom: 94 }, aspect: .7,
   obstacles: [
-    ...[38, 62].flatMap(x => [32, 67].map(y => ({ left: x - 10, right: x + 10, top: y - 15, bottom: y + 11 }))),
+    ...FACILITY_FOOTPRINTS,
     { left: 46, right: 54, top: 44, bottom: 55 },
     { left: 6, right: 11, top: 31, bottom: 39 },
     { left: 86, right: 94, top: 50, bottom: 59 },
@@ -38,25 +46,32 @@ export function scenePoint(client: Point, rect: { left: number; top: number; wid
   return { x: (client.x - rect.left) / rect.width * 100, y: (client.y - rect.top) / rect.height * 100 }
 }
 export function distance(a: Point, b: Point, aspect = 1): number { return Math.hypot(b.x - a.x, (b.y - a.y) * aspect) }
-export function nearestPoint(target: Point, mesh: NavigationMesh): Point | null {
+export function nearestPoint(target: Point, mesh: NavigationMesh, reachableFrom?:Point): Point | null {
   let best: Point | null = null, score = Infinity
   for (let x = 6; x <= 94; x += 2) for (let y = 16; y <= 94; y += 2) {
     const p = { x, y }, d = distance(p, target, mesh.aspect)
-    if (walkable(p, mesh) && d < score) { best = p; score = d }
+    if (walkable(p, mesh) && d < score && (!reachableFrom || clearSegment(reachableFrom,p,mesh))) { best = p; score = d }
   }
   return best
 }
 export function clearSegment(a: Point, b: Point, mesh: NavigationMesh): boolean {
-  const steps = Math.ceil(distance(a, b) * 3)
-  for (let i = 0; i <= steps; i++) {
-    const t = steps ? i / steps : 0
-    if (!walkable({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t }, mesh)) return false
+  if(!walkable(a,mesh)||!walkable(b,mesh))return false
+  // Exact segment/rectangle intersection, including corners and very thin obstacles.
+  for(const obstacle of mesh.obstacles){
+    let near=0,far=1
+    for(const [origin,delta,min,max]of [[a.x,b.x-a.x,obstacle.left,obstacle.right],[a.y,b.y-a.y,obstacle.top,obstacle.bottom]]){
+      if(delta===0){if(origin<min||origin>max){near=Infinity;break}}
+      else{const t1=(min-origin)/delta,t2=(max-origin)/delta;near=Math.max(near,Math.min(t1,t2));far=Math.min(far,Math.max(t1,t2))}
+    }
+    if(near<=far)return false
   }
   return true
 }
 /** A* on a two-percent grid. Four neighbors prevent diagonal corner cutting. */
 export function findRoute(start: Point, target: Point, mesh: NavigationMesh): Point[] {
-  const end = nearestPoint(target, mesh), origin = nearestPoint(start, mesh)
+  if(!walkable(start,mesh))return []
+  if(clearSegment(start,target,mesh))return distance(start,target)<.001?[{...start}]:[{...start},{...target}]
+  const end = nearestPoint(target, mesh), origin = nearestPoint(start, mesh, start)
   if (!end || !origin) return []
   const key = (p: Point) => `${p.x},${p.y}`
   const open = new Map<string, Point>([[key(origin), origin]])
@@ -74,7 +89,8 @@ export function findRoute(start: Point, target: Point, mesh: NavigationMesh): Po
     if (id === key(end)) {
       const path = [current]
       while (parent.has(key(path[0]))) path.unshift(parent.get(key(path[0]))!)
-      if (walkable(start, mesh) && clearSegment(start, path[0], mesh)) path.unshift(start)
+      path.unshift(start)
+      if(walkable(target,mesh)&&clearSegment(path.at(-1)!,target,mesh))path.push(target)
       const smooth = [path[0]]
       for (let i = 0; i < path.length - 1;) {
         let next = path.length - 1

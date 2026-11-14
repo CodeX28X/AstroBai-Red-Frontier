@@ -1,6 +1,6 @@
 import { useId, useRef, useState } from 'react';
 import { NavigatingActor } from './NavigatingActor';
-import { scenePoint, SURFACE_MESH, nextNavigationId, type NavigationRequest } from '../../navigation/navigation';
+import { scenePoint, SURFACE_MESH, nextNavigationId, facilityApproachPoint, type NavigationRequest } from '../../navigation/navigation';
 import { MarsTerrain } from './MarsTerrain';
 import { marsLocations } from '../../data/marsLocations';
 import type { MarsMapProps } from '../../types/marsMap';
@@ -38,7 +38,7 @@ export function MarsMap({ selectedFacilityId, onSelectFacility, facilityStatuses
       }}/>}
       <MarsEffects {...environment}/>
       {navigation?.highlightScout && navigation.roverAvailable && <button type="button" className="scout-objective" style={{ left: '15%', top: '22%' }} onClick={navigation.onScoutSelect} aria-label="Scout survey target">▣ Scout<span>Survey here</span></button>}
-      {marsLocations.map(location => <div key={location.id} className={navigation?.objectiveFacility === location.id ? 'objective-facility' : undefined}><Facility location={location} status={facilityStatuses[location.id]} sheltering={location.id === 'habitat' && environment.crewSheltering} selected={selectedFacilityId === location.id} onSelect={() => inspect({ x: location.position.x, y: location.position.y < 50 ? 56 : 86 }, () => onSelectFacility(location.id))} /></div>)}
+      {marsLocations.map(location => <div key={location.id} className={navigation?.objectiveFacility === location.id ? 'objective-facility' : undefined}><Facility location={location} status={facilityStatuses[location.id]} sheltering={location.id === 'habitat' && environment.crewSheltering} selected={selectedFacilityId === location.id} onSelect={() => inspect(facilityApproachPoint(location.id), () => onSelectFacility(location.id))} /></div>)}
       {sites.map(site => <ExplorationSite key={site.id} site={site} selected={selectedSiteId === site.id} onSelect={() => onSelectSite?.(site.id)}/>)}
       {completionNotice && <div key={completionNotice.id} className="completion-notice" role="status"><span aria-hidden="true">✓</span> {completionNotice.message}</div>}
       <span className="terrain-caption" aria-hidden="true">A SMALL HOME. A BIG ADVENTURE.</span>
