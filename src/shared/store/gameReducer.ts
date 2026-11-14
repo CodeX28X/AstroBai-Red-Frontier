@@ -26,7 +26,7 @@ export function createInitialGameState(): GameState {
     },
     objectives: [],
     activeEvent: null,
-    actionLimits: { maxSol: 100 },
+    actionLimits: { maxSol: 10 },
     protection: { storm: false, radiation: false },
     outcome: null,
   }

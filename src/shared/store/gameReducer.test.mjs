@@ -33,6 +33,17 @@ test('enforces the maximum sol', () => {
   )
 })
 
+test('caps the mission at ten sols', () => {
+  const started = gameReducer(createInitialGameState(), { type: 'START_GAME' })
+  assert.equal(started.actionLimits.maxSol, 10)
+
+  const solNine = { ...started, sol: 9 }
+  const solTen = gameReducer(solNine, { type: 'ADVANCE_SOL' })
+
+  assert.equal(solTen.sol, 10)
+  assert.throws(() => gameReducer(solTen, { type: 'ADVANCE_SOL' }), /maximum sol reached/)
+})
+
 test('rejects advancing after the game reaches a terminal outcome', () => {
   const started = gameReducer(createInitialGameState(), { type: 'START_GAME' })
   const terminal = { ...started, outcome: 'failure' }
