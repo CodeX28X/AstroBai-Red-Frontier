@@ -1,0 +1,69 @@
+export type GamePhase =
+  | 'menu'
+  | 'launch'
+  | 'travel'
+  | 'landing'
+  | 'outpost'
+  | 'return'
+  | 'debrief'
+
+export interface Resources {
+  power: number
+  oxygen: number
+  water: number
+  food: number
+}
+
+export type BuildingId =
+  | 'habitat'
+  | 'solar-array'
+  | 'greenhouse'
+  | 'water-extractor'
+
+export type BuildingStatus = 'unbuilt' | 'operational' | 'damaged' | 'offline'
+
+export type MissionId = 'icebound' | 'power-grid' | 'solar-storm' | 'life-support'
+
+export type MissionStatus = 'locked' | 'available' | 'active' | 'completed' | 'failed'
+
+export interface ObjectiveState {
+  id: string
+  completed: boolean
+}
+
+export interface ActionLimits {
+  maxSol: number
+}
+
+export interface ProtectionState {
+  storm: boolean
+  radiation: boolean
+}
+
+export type GameOutcome = 'success' | 'failure' | null
+
+export interface GameState {
+  phase: GamePhase
+  sol: number
+  resources: Resources
+  facilities: Record<BuildingId, BuildingStatus>
+  missions: Record<MissionId, MissionStatus>
+  objectives: ObjectiveState[]
+  activeEvent: string | null
+  actionLimits: ActionLimits
+  protection: ProtectionState
+  outcome: GameOutcome
+}
+
+export type GameAction =
+  | { type: 'START_GAME' }
+  | { type: 'ADVANCE_SOL' }
+  | { type: 'RESET_GAME' }
+  | { type: 'SET_PHASE'; phase: GamePhase }
+  | { type: 'UPDATE_RESOURCES'; deltas: Partial<Resources> }
+  | { type: 'SET_FACILITY_STATUS'; buildingId: BuildingId; status: BuildingStatus }
+  | { type: 'SET_MISSION_STATUS'; missionId: MissionId; status: MissionStatus }
+  | { type: 'UPDATE_OBJECTIVE'; objectiveId: string; completed: boolean }
+  | { type: 'SET_ACTIVE_EVENT'; eventId: string | null }
+  | { type: 'SET_PROTECTION'; protection: Partial<ProtectionState> }
+  | { type: 'SET_OUTCOME'; outcome: Exclude<GameOutcome, null> }
