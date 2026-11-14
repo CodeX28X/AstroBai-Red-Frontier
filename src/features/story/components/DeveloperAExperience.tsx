@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { MarsMap } from '../../mars-map'
+import { useEffect, useRef, useState } from 'react'
+import { MarsMap, FacilityInterior } from '../../mars-map'
 import type { FacilityId } from '../../mars-map'
 import { chapterCards, futureMessages, homeCheckLabels, todayGoals } from '../data/approvedScenes'
 import { feedbackCopy } from '../data/feedbackCopy'
@@ -7,7 +7,6 @@ import { formatCopy } from '../data/formatCopy'
 import { scienceCards } from '../data/scienceCards'
 import { quickChecks, recapLogs } from '../data/quickChecks'
 import { systemCopy } from '../data/systemCopy'
-import { facilityPurpose, facilityLabels } from '../data/facilityCopy'
 import type { ExperiencePorts, ExperienceView, IndicatorView } from '../types/experience'
 import { MainMenu } from './MainMenu'
 import { StoryBackdrop } from './StoryBackdrop'
@@ -16,6 +15,7 @@ import { Dialogue, ReadAloud } from './Dialogue'
 import { PowerPlanPanel } from './PowerPlanPanel'
 import { useUiSettings } from './useUiSettings'
 import { useUiSound } from './useUiSound'
+import { FacilityInspection } from './FacilityInspection'
 import './experience.css'
 
 type Panel = 'power' | 'science' | 'settings' | 'journal' | 'missions' | 'crew' | 'indicator' | 'deeper' | null
@@ -27,6 +27,13 @@ export function DeveloperAExperience({ view, ports, previewLabel }: {readonly vi
   const [indicator, setIndicator] = useState<IndicatorView | null>(null)
   const [facility, setFacility] = useState<FacilityId | null>(null)
   const [site, setSite] = useState<string | null>(null)
+  const [interiorId, setInteriorId] = useState<FacilityId | null>(null)
+  const enterButtonRef=useRef<HTMLButtonElement>(null)
+  const returningFromInterior=useRef(false)
+  useEffect(() => {
+    if (interiorId !== null) {returningFromInterior.current=true;return}
+    if (returningFromInterior.current) {enterButtonRef.current?.focus();returningFromInterior.current=false}
+  },[interiorId])
   const [cargo, setCargo] = useState<readonly string[]>([])
   const [hint, setHint] = useState('')
   const {settings,change:changeSetting} = useUiSettings()
@@ -38,7 +45,6 @@ export function DeveloperAExperience({ view, ports, previewLabel }: {readonly vi
   const [kidCard, setKidCard] = useState(0)
   const [quickAnswer, setQuickAnswer] = useState<string | null>(null)
   const [reflection, setReflection] = useState<string | null>(null)
-  const selected = facility ? {id:facility,label:facilityLabels[facility]} : undefined
   const selectedSite = view.map.sites?.find(item => item.id === site)
   const chapter = chapterCards[view.chapter - 1]
   const quickCheck = quickChecks[view.chapter - 1]
@@ -102,13 +108,17 @@ export function DeveloperAExperience({ view, ports, previewLabel }: {readonly vi
         </div>
       </StoryBackdrop> : <>
         {view.page === 'outpost' && <>
+          {interiorId && <FacilityInterior key={interiorId} facilityId={interiorId} status={view.map.facilityStatuses[interiorId]} animationsEnabled={!reducedMotion} crewSheltering={view.map.environment?.crewSheltering} onExit={() => setInteriorId(null)}/>}
+          {/* Retain B’s map while indoors so returning does not replay the walk. */}
+          <div className="a-outpost-surface" hidden={interiorId !== null}>
           <section className="a-today"><div><span>Today’s Goal</span><h1>{view.todayGoal ?? todayGoals[view.sol - 1] ?? view.scene.title}</h1></div><div className="a-job-slots">{view.jobs.map(job => <span key={job.label}>{job.available ? '○' : '✓'} {job.label}{job.available ? ' · ready' : ' · used'}</span>)}</div><button type="button" className="a-primary" onClick={advance}>Advance Sol →</button></section>
-          <div className="a-map-stage"><MarsMap {...view.map} animationsEnabled={!reducedMotion} selectedFacilityId={facility} selectedSiteId={site} onSelectFacility={id => {setFacility(id);setSite(null);ports.onInspectLocation?.(id);setHint('✧ Looking is free. You found a curiosity sparkle.')}} onSelectSite={id => {setSite(id);setFacility(null)}}/>
-            {(selected || selectedSite) && <aside className="a-inspection"><button type="button" className="a-close" aria-label="Close inspection" onClick={() => {setFacility(null);setSite(null)}}>×</button><h2>{selected?.label ?? selectedSite?.label}</h2><p>{selected ? facilityPurpose[selected.id] : `${selectedSite?.status} · Looking is free.`}</p><p>{selected ? view.facilityInfo?.[selected.id]?.statusLine ?? view.map.facilityStatuses[selected.id] : selectedSite?.assignment}</p><small>Looking is always free.</small></aside>}
+          <div className="a-map-stage"><MarsMap {...view.map} isActive={interiorId === null && view.map.isActive !== false} animationsEnabled={!reducedMotion} selectedFacilityId={facility} selectedSiteId={site} onSelectFacility={id => {setFacility(id);setSite(null);ports.onInspectLocation?.(id);setHint('✧ Looking is free. You found a curiosity sparkle.')}} onSelectSite={id => {setSite(id);setFacility(null)}}/>
+            <FacilityInspection facilityId={facility} statusLine={facility ? view.facilityInfo?.[facility]?.statusLine ?? view.map.facilityStatuses[facility] : undefined} site={selectedSite} enterButtonRef={enterButtonRef} onClose={() => {setFacility(null);setSite(null)}} onEnter={id => {setHint('');setInteriorId(id)}}/>
           </div>
           <nav className="a-map-site-nav" aria-label="Science site selection">{view.map.sites?.map(location => <button type="button" key={location.id} aria-pressed={site===location.id} onClick={() => {setSite(location.id);setFacility(null)}}>{location.label}<small>{location.status}</small></button>)}</nav>
           <nav className="a-bottom-nav" aria-label="Dashboard panels"><button type="button" onClick={() => setPanel('missions')}>Missions</button><button type="button" onClick={() => setPanel('power')}>Power Plan</button><button type="button" onClick={() => setPanel('science')}>Science</button><button type="button" onClick={() => setPanel('crew')}>Crew</button><button type="button" onClick={() => setPanel('journal')}>Journal</button><button type="button" onClick={() => setHint(view.baiSuggestion ? `I would try: ${view.baiSuggestion.text}. You decide!` : 'Nothing urgent today. Pick any job you like!')}>Ask BAI</button></nav>
           <section className="a-mission-strip"><div><small>Current mission</small><h2>{view.scene.title}</h2></div><button type="button" className="a-primary" onClick={() => setPanel('missions')}>Open mission briefing</button></section>
+          </div>
         </>}
         {view.page === 'home-check' && <section className="a-end-panel"><h1>Ready for Home?</h1><Dialogue speaker="BAI" text="Let us check six things, one by one." readAloud={readAloud}/>{checkList}</section>}
         {view.page === 'discovery' && <section className={`a-end-panel a-discovery a-result-${view.scienceResult ?? 'pending'}`}><h1>A Discovery Worth Protecting</h1><Dialogue speaker="BAI" text="Let us count our clues." readAloud={readAloud}/><div className="a-clue-list">{view.evidence.map(item => <span key={item.label}>✧ {item.label} · {item.points}</span>)}</div><h2>{view.scienceResult ? scienceLabel : 'The lab goes quiet…'}</h2><p>{view.scienceResult === 'positive' ? 'Ice! Real water ice, under the dust!' : view.scienceResult === 'inconclusive' ? 'Hmm. Some clues point to ice. Not enough to be sure.' : view.scienceResult === 'negative' ? 'A no is a real answer. You helped draw the map!' : 'The crew waits for the reading.'}</p><p>This is a game result. Real scientists would test again.</p><h3>Message to Future Explorers</h3><div className="a-choice-grid">{futureMessages.map(message => <button type="button" key={message.id} aria-pressed={view.selectedMessage===message.id} onClick={() => ports.onMessage(message.id)}>{message.text}</button>)}</div></section>}

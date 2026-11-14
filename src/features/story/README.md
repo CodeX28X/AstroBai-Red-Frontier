@@ -41,3 +41,7 @@ node src/features/story/tests/buildPreview.mjs
 ```
 
 The existing shared npm test script remains unchanged. Invoke the A tests explicitly in CI until the team approves updating the root script. The separate preview build goes to ignored `node_modules/.cache`; the normal production app entry is preserved.
+
+## Facility entry repair
+
+A now imports B's existing FacilityInterior and provides Enter buttons for all four buildings. The map is retained/paused under a hidden wrapper while indoors. Back/EXIT/Escape restores focus and preserves the astronaut's entrance position. Four desktop and four mobile room returns passed browser checks; the A suite now has13 passing tests. This is free inspection/navigation, not an operation or expedition. No B or C/D source files changed.

@@ -24,6 +24,7 @@ const entries = [
   ['SceneFrame', 'components/SceneFrame.tsx'],
   ['OutpostSlot', 'components/OutpostSlot.tsx'],
   ['DeveloperAExperience', 'components/DeveloperAExperience.tsx'],
+  ['FacilityInspection', 'components/FacilityInspection.tsx'],
   ['PowerPlanPanel', 'components/PowerPlanPanel.tsx'],
   ['experienceFixture', 'preview/experienceFixtures.ts'],
   ['previewPresets', 'preview/experienceFixtures.ts'],
@@ -43,7 +44,7 @@ await build({
   },
 });
 const require = createRequire(import.meta.url);
-const { MainMenu, SceneFrame, OutpostSlot, DeveloperAExperience, PowerPlanPanel, experienceFixture, previewPresets, presetValidation, feedbackCopy, formatCopy } = require(join(scratch, 'components.cjs'));
+const { MainMenu, SceneFrame, OutpostSlot, DeveloperAExperience, FacilityInspection, PowerPlanPanel, experienceFixture, previewPresets, presetValidation, feedbackCopy, formatCopy } = require(join(scratch, 'components.cjs'));
 const render = (component, props) => renderToStaticMarkup(React.createElement(component, props));
 
 test('menu Continue is unavailable without a save and emits only a supplied command', () => {
@@ -108,4 +109,22 @@ test('all 45 GDD feedback IDs exist and copy substitution never evaluates logic'
  assert.equal(Object.keys(feedbackCopy).length,45);
  for(const id of ['fb_grid_repair','fb_ls_reroute','fb_storm_continue_rover','fb_result_negative','fb_ret_c6_fail','fb_go_oxygen','fb_message_saved'])assert.ok(feedbackCopy[id]);
  assert.equal(formatCopy('Battery {battery}; unknown {missing}',{battery:60}),'Battery 60; unknown —');
+});
+
+test('each facility inspection offers free entry and forwards exactly the selected ID', () => {
+ const labels={habitat:'Habitat','solar-array':'Solar Array',greenhouse:'Greenhouse','research-lab':'Research Laboratory'};
+ for(const [facilityId,label] of Object.entries(labels)) {
+  const calls=[]; const props=Object.freeze({facilityId,statusLine:'offline',onClose(){},onEnter:id=>calls.push(id)});
+  const html=render(FacilityInspection,props);
+  assert.ok(html.includes('Enter '+label+' →'));assert.match(html,/Looking is always free/);assert.equal(calls.length,0);
+  FacilityInspection(props).props.children.at(-1).props.onClick();
+  assert.deepEqual(calls,[facilityId]);assert.equal(props.statusLine,'offline');
+ }
+});
+test('science-site inspection never offers a facility interior', () => {
+ const html=render(FacilityInspection,{facilityId:null,site:{id:'site',label:'Frost Ridge',status:'locked',position:{x:15,y:10}},onClose(){},onEnter(){assert.fail('Site entered a room')}});
+ assert.match(html,/Frost Ridge/);assert.doesNotMatch(html,/a-enter-facility/);
+});
+test('empty selection renders no inspection card', () => {
+ assert.equal(render(FacilityInspection,{facilityId:null,onClose(){},onEnter(){}}),'');
 });

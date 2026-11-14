@@ -57,3 +57,7 @@ Ports cover new/continue/restart/menu navigation, cargo submission, exact choice
 -32 bundled B source files compared byte for byte with the team checkout: no differences. The team's Git working tree remained clean.
 
 Do not call the package a finished v2.0 game. It is a substantially expanded, testable Developer A UI handoff for her to review, modify and integrate with C/D.
+
+## Facility entry repair
+
+A now imports B's existing FacilityInterior and provides Enter buttons for all four buildings. The map is retained/paused under a hidden wrapper while indoors. Back/EXIT/Escape restores focus and preserves the astronaut's entrance position. Four desktop and four mobile room returns passed browser checks; the A suite now has13 passing tests. This is free inspection/navigation, not an operation or expedition. No B or C/D source files changed.
