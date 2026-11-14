@@ -1,0 +1,25 @@
+.map-section{min-width:0;border:2px solid #3c5065;background:#17263b;box-shadow:0 6px 0 #0a1525}
+.map-heading{display:flex;justify-content:space-between;gap:12px;padding:15px 18px;color:#c4d5e2;font-size:11px;font-weight:800;letter-spacing:1.5px}.live-dot{display:inline-block;width:7px;height:7px;background:#93dfcc;margin-right:8px}
+.mars-terrain{position:relative;aspect-ratio:4/3;background-color:#ce805f;background-image:radial-gradient(#edac7b 1px,transparent 1px),radial-gradient(#b66a54 1px,transparent 1px);background-size:31px 29px,47px 43px;background-position:4px 2px,18px 21px;isolation:isolate;overflow:hidden}
+.terrain-art{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.map-north{position:absolute;right:18px;top:18px;color:#6b3840;font-weight:900;text-align:center;line-height:1.4}.terrain-caption{position:absolute;bottom:17px;width:100%;text-align:center;font-size:10px;font-weight:800;color:#713c3e;letter-spacing:2px;pointer-events:none}
+.mars-facility{position:absolute;left:var(--x);top:var(--y);transform:translate(-50%,-50%);width:34%;max-width:240px;min-height:100px;display:flex;flex-direction:column;align-items:center;background:transparent;border:2px solid transparent;border-radius:3px;color:#fff6e5;padding:4px 8px 10px;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.mars-facility svg{width:100%;max-width:200px;display:block;filter:drop-shadow(0 4px 0 #884a3d44)}.facility-label{background:#203148;border:2px solid #516075;box-shadow:0 3px 0 #743e3c;padding:7px 10px;font-size:clamp(12px,1.4vw,15px);font-weight:750;line-height:1.2;max-width:100%}.facility-selection{font-size:10px;font-weight:900;letter-spacing:1.5px;color:#17263b;background:var(--facility-color);padding:4px 8px;visibility:hidden}
+.mars-facility:hover{background:#fff0c51c}.mars-facility:hover .facility-selection,.mars-facility:focus-visible .facility-selection,.mars-facility.is-selected .facility-selection{visibility:visible}.mars-facility.is-selected{border-color:#ffe49d;background:#ffedc51a;box-shadow:0 0 0 3px #7c4d4140}.mars-facility.is-selected .facility-label{color:#ffdf93;border-color:#ffdf93}.mars-facility:focus-visible{outline:4px solid #b4f6ff;outline-offset:4px;z-index:2}
+.map-instructions{margin:0;padding:15px 18px;color:#bed0dd;font-size:12px;line-height:1.6}.map-instructions span{color:#ffe0a0;margin-right:8px}
+.facility-art{position:relative;display:block;width:100%;max-width:200px;pointer-events:none}
+.equipment-light{position:absolute;right:24%;top:58%;width:6px;height:6px;background:#c6ffd1;box-shadow:0 0 0 2px #254444;animation:equipment-glow 3.6s ease-in-out infinite}
+.status-offline .facility-art svg{filter:grayscale(.85) brightness(.65)}
+.status-offline .equipment-light{background:#59677a;animation:none}
+.status-damaged .equipment-light{background:#ffcf70;animation:none}
+.status-damaged .facility-art svg{filter:sepia(.25) brightness(.85)}
+.status-badge{display:block;margin-top:6px;padding:3px 6px;background:#203148;color:#b7f3cc;font-size:10px;line-height:1.4;text-transform:capitalize;border:1px solid #697d85}
+.status-badge.status-offline{color:#d9e0e8}.status-badge.status-damaged{color:#ffde93;border-color:#ffcf70}
+.status-damaged .status-symbol{display:inline-block;font-weight:900;animation:warning-glow 3s ease-in-out infinite}
+@keyframes equipment-glow{0%,100%{opacity:1}50%{opacity:.45}}
+@keyframes warning-glow{0%,100%{opacity:1;text-shadow:0 0 7px #ffcf7080}50%{opacity:.6;text-shadow:none}}
+.motion-paused .equipment-light,.motion-paused .status-symbol{animation:none}
+@media(prefers-reduced-motion:reduce){.map-section .equipment-light,.map-section .status-symbol{animation:none}}
+@media(max-width:600px){.map-heading{padding:12px;font-size:9px;letter-spacing:1px}.mars-terrain{aspect-ratio:4/5}.mars-facility{width:43%;padding:4px 3px 8px}.mars-facility svg{max-width:150px}.facility-label{font-size:12px;padding:7px 5px}.facility-selection{font-size:9px}.terrain-caption{font-size:8px;letter-spacing:1px}.map-north{right:10px;top:10px}.map-instructions{padding:12px}}
+
+/* Base component rules must also work outside the demo App. */
+.map-section{font-family:ui-monospace,Consolas,monospace}.map-section .compact-facility-name{display:none}

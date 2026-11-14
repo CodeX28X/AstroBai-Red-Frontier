@@ -1,0 +1,13 @@
+.mars-effects{position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+.storm-haze{position:absolute;inset:0;background:linear-gradient(115deg,#f3c37c12,#edb26c40,#f3c37c10)}
+.storm-grain{position:absolute;left:-20%;width:90px;height:3px;background:#ffe0a566;box-shadow:30px 12px #f7ca8b44;animation:storm-drift 6s linear infinite;transform:translateX(25vw)}
+@keyframes storm-drift{from{transform:translateX(-100px)}to{transform:translateX(1700px)}}
+.environment-notice{display:flex;gap:9px;flex-wrap:wrap;padding:10px 16px;background:#172b3f;border:2px solid #647d86;border-top:0;min-height:38px;color:#ffe2a0;font-size:11px;line-height:1.7}
+.environment-notice span{padding-right:12px}
+.habitat-sheltering .facility-art{outline:2px dashed #a6ece0;outline-offset:2px;background:#9ce6d014}
+.shelter-badge{font-size:10px;color:#c9fff0;background:#183c42;padding:4px 7px;border:1px solid #9de7d6;margin-top:5px}
+.malfunction-plume{position:absolute;width:8px;height:8px;left:30%;top:25%;background:#c6b4a1;box-shadow:6px -5px #c6b4a199;animation:malfunction-rise 3.5s ease-out infinite;pointer-events:none;opacity:.6}
+@keyframes malfunction-rise{0%{transform:translateY(0);opacity:.15}45%{opacity:.7}100%{transform:translate(-5px,-20px);opacity:0}}
+.environment-demo{margin-top:12px;border:1px solid #697d85;padding:16px;display:flex;flex-wrap:wrap;gap:18px}.environment-demo legend{padding:0 6px;font-size:12px;color:#ffdf93}.environment-demo label{display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer;font-size:12px}.environment-demo input{width:20px;height:20px;accent-color:#ffdf93}
+.map-section.motion-paused .equipment-light,.map-section.motion-paused .status-symbol{animation-play-state:paused}
+@media(prefers-reduced-motion:reduce){.map-section .storm-grain,.map-section .malfunction-plume,.map-section .ambient-rover,.map-section .ambient-crew,.map-section .actor-feet,.map-section .site-crystal,.map-section .dust-streak{animation:none!important}.map-section .storm-grain{transform:translateX(35vw)}}

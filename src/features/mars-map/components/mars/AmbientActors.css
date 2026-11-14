@@ -1,0 +1,25 @@
+.ambient-actors{position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+.facility-walker{position:absolute;transform:translate(-50%,-50%);pointer-events:none;width:28px;line-height:0}
+.facility-walker .expedition-sprite{display:block;width:28px!important;position:relative}
+.walker-shadow{position:absolute;bottom:-2px;left:3px;width:22px;height:5px;background:#674a3a55;border-radius:40%}
+.facility-walker.is-walking .actor-feet{animation:walk-steps .45s steps(2,end) infinite;transform-box:fill-box;transform-origin:center}
+@media(max-width:900px){.facility-walker,.facility-walker .expedition-sprite{width:18px!important}.walker-shadow{width:14px;left:2px;height:3px}}
+.patrol-rover,.patrol-crew{position:absolute;transform:translate(-50%,-50%);pointer-events:none;will-change:transform}
+.patrol-crew{left:50%;top:43%;animation:crew-route 24s linear infinite}
+.patrol-crew .expedition-sprite{width:28px!important;display:block}
+.patrol-rover{left:50%;top:67%;animation:rover-route 30s linear infinite}
+.patrol-rover .expedition-sprite{width:48px!important;display:block}
+.patrol-crew .actor-feet{animation:walk-steps .7s steps(2,end) infinite;transform-box:fill-box;transform-origin:center}
+.patrol-rover .rover-trail{position:absolute;left:-12px;top:70%;width:12px;height:3px;background:#e6b47c88;box-shadow:-8px 4px #e6b47c44;animation:trail-fade 3s ease-out infinite}
+.ambient-drift{position:absolute;width:72px;height:2px;background:#efc58b55;box-shadow:18px 7px #efc58b33;animation:gentle-drift 18s linear infinite}
+.drift-a{left:5%;top:47%}.drift-b{left:65%;top:80%;animation-delay:-9s}
+.ambient-mote{position:absolute;width:3px;height:3px;background:#f4d29a;animation:mote-drift 13s linear infinite;opacity:0}.mote-a{left:38%;top:26%}.mote-b{left:60%;top:55%;animation-delay:-5s}.mote-c{left:18%;top:75%;animation-delay:-8s}
+@keyframes crew-route{0%,15%,100%{transform:translate(-50%,-50%)}43%,67%{transform:translate(-50%,calc(-50% + 12cqh))}}
+@keyframes rover-route{0%,18%,100%{transform:translate(calc(-50% - 2cqw),-50%)}48%,67%{transform:translate(calc(-50% + 2cqw),-50%)}}
+@keyframes walk-steps{50%{transform:translateY(-1px)}}
+@keyframes trail-fade{0%,100%{opacity:0}40%{opacity:.6}}
+@keyframes gentle-drift{0%{transform:translateX(-20px);opacity:0}20%,70%{opacity:.7}100%{transform:translateX(120px);opacity:0}}
+@keyframes mote-drift{0%,100%{opacity:0;transform:translate(0,0)}45%{opacity:.45}90%{opacity:0;transform:translate(32px,-8px)}}
+.motion-paused .ambient-actors *{animation-play-state:paused!important}
+@media(prefers-reduced-motion:reduce){.ambient-actors *{animation:none!important}.ambient-mote{display:none}}
+@media(max-width:600px){.patrol-rover .expedition-sprite{width:40px!important}.patrol-crew .expedition-sprite{width:25px!important}}
