@@ -19,6 +19,7 @@ export interface StoryDecisionDefinition {
 }
 
 // These are temporary game-balancing proposals, not measurements from NASA data.
+/** @deprecated Legacy opening flow. New MVP callers use LANDING_SITES and validateMissionTransition. */
 export const STORY_DECISIONS = [
   {
     id: 'launch-extra-oxygen',
