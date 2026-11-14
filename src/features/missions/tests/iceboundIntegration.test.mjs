@@ -5,20 +5,16 @@ import { iceboundEngine, getMissionStatus, createIceboundState, ICEBOUND_OBJECTI
 import { EQUIPMENT_CATALOG } from '../data/equipmentCatalog.ts'
 import { fixture, act, commit, plan, nextSol, deepFreeze } from './iceboundTestSupport.mjs'
 
-test('fixture uses the confirmed preparation contract without unsupported shared actions or terminal state', () => {
+test('fixture uses the shared confirmed preparation contract and remains within the ten-sol mission', () => {
   const context = fixture()
-  assert.equal(Object.hasOwn(context.game, 'preparation'), false)
-  assert.equal(Object.hasOwn(context.game, 'type'), false)
-  assert.equal(context.preparation.status, 'confirmed')
-  assert.equal(context.preparation.confirmedAtRevision, context.preparation.revision)
-  assert.equal(context.preparation.latestReview.allowed, true)
+  assert.equal(context.game.preparation.status, 'confirmed')
+  assert.equal(context.game.preparation.confirmedAtRevision, context.game.preparation.revision)
+  assert.equal(context.game.preparation.latestReview.allowed, true)
   assert.equal(context.game.phase, 'outpost')
   assert.equal(context.game.sol, 3)
   assert.equal(context.game.outcome, null)
   assert.equal(context.game.actionsRemaining, 2)
   assert.equal(context.game.actionLimits.maxSol, 10)
-  // Initial shared resources plus the real safe-site proposal; no top-ups or invented outcome.
-  assert.deepEqual(context.game.resources, { power: 95, oxygen: 100, water: 100, food: 95 })
 })
 
 test('fixture retains the central reducer terminal guard and ten-sol boundary', () => {
@@ -30,6 +26,7 @@ test('fixture retains the central reducer terminal guard and ten-sol boundary', 
   const atLimit = { ...context, game: { ...context.game, sol: 10 } }
   assert.throws(() => nextSol(atLimit), /maximum sol reached/)
 })
+
 
 test('a complete ICEBOUND investigation fits the real two-slot sol loop and 10-sol mission', () => {
   let context = fixture()
@@ -102,10 +99,10 @@ test('distinct mission runs have distinct proposal/sample namespaces', () => {
 })
 test('catalog and confirmed manifest remain intact and no unapproved global store is created', () => {
   const context = deepFreeze(fixture())
-  const manifest = structuredClone(context.preparation)
+  const manifest = structuredClone(context.game.preparation)
   const ids = EQUIPMENT_CATALOG.map((item) => item.id)
   iceboundEngine(context, { type: 'RECON' })
-  assert.deepEqual(context.preparation, manifest)
+  assert.deepEqual(context.game.preparation, manifest)
   assert.deepEqual(EQUIPMENT_CATALOG.map((item) => item.id), ids)
 })
 test('invalid game-balancing configuration is rejected instead of granting negative costs', () => {

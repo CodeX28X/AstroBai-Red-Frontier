@@ -1,7 +1,6 @@
 import type { BuildingStatus, GameState, MissionStatus, Resources } from '../../../shared/types/game.ts'
 import type { MissionObjectiveChange } from '../contracts.ts'
 import type { EquipmentId } from './preparation.ts'
-import type { PreparationState } from './preparationEngine.ts'
 
 export type IceboundObjectiveId =
   | 'icebound.recon' | 'icebound.site-selection' | 'icebound.expedition-plan'
@@ -165,8 +164,6 @@ export interface IceboundBalance {
 }
 export interface IceboundContext {
   game: Readonly<GameState>
-  /** Existing Phase 3 engine snapshot supplied by the owner; not duplicated inside GameState. */
-  preparation: Readonly<PreparationState>
   mission: Readonly<IceboundState>
   readiness: Readonly<IceboundReadiness>
   balance?: IceboundBalance

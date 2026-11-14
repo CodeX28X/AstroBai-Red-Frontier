@@ -22,7 +22,7 @@ export function scenarioFor(context: IceboundContext) {
   return ICEBOUND_SCENARIOS.find((scenario) => scenario.id === context.mission.scenarioId)
 }
 export function availableEquipment(context: IceboundContext): string[] {
-  return context.preparation.manifest.optionalCargo
+  return context.game.preparation.manifest.optionalCargo
     .filter((entry) => entry.quantity > 0 && context.readiness.deployedEquipment.some(
       (item) => item.equipmentId === entry.equipmentId && item.status === 'operational',
     ))
@@ -46,7 +46,7 @@ export function baseIssues(context: IceboundContext): IceboundIssue[] {
   if (!Number.isInteger(game.sol) || game.sol < balance.earliestSol || game.sol > balance.finalSol) {
     issues.push(iceboundIssue('SOL_WINDOW', 'Begin ICEBOUND from Sol 3 and finish within the mission window.'))
   }
-  const preparation = context.preparation
+  const preparation = game.preparation
   if (preparation.status !== 'confirmed' || preparation.confirmedAtRevision !== preparation.revision ||
       preparation.reviewedRevision !== preparation.revision || !preparation.latestReview?.allowed ||
       preparation.manifest.missionId !== 'icebound' || preparation.manifest.baselineId !== PREDEPLOYED_OUTPOST_BASELINE.id ||

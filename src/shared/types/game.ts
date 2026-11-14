@@ -1,4 +1,6 @@
 import type { PreparationState } from '../../features/missions/types/preparationEngine.ts'
+import type { IceboundAnalysis, IceboundReadiness, IceboundState } from '../../features/missions/types/icebound.ts'
+import type { CommittedIceboundEvent, IceboundPlanningState, IceboundStoreAction } from './iceboundIntegration.ts'
 
 export type GamePhase =
   | 'menu'
@@ -59,6 +61,8 @@ export interface GameFeedback {
   kind: 'success' | 'error'
   message: string
   feedbackId: string | null
+  code?: string
+  analysis?: IceboundAnalysis
 }
 
 export interface GameState {
@@ -78,9 +82,15 @@ export interface GameState {
   protection: ProtectionState
   outcome: GameOutcome
   feedback: GameFeedback | null
+  icebound: IceboundState
+  iceboundPlanning: IceboundPlanningState
+  iceboundReadiness: IceboundReadiness
+  appliedResolutionIds: string[]
+  iceboundEvents: CommittedIceboundEvent[]
 }
 
 export type GameAction =
+  | IceboundStoreAction
   | { type: 'START_GAME' }
   | { type: 'ADVANCE_SOL' }
   | { type: 'RESET_GAME' }

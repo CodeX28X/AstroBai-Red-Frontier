@@ -2,6 +2,11 @@ import type { ActionCategory, GameAction, GameState, Resources } from '../types/
 import { PREDEPLOYED_OUTPOST_BASELINE } from '../../features/missions/data/equipmentCatalog.ts'
 import { preparationEngine, createPreparationState } from '../../features/missions/engine/preparation/preparationEngine.ts'
 import { validateMissionTransition, type MissionProgressionIntent } from '../../features/missions/engine/progression/missionProgression.ts'
+import { createIceboundState } from '../../features/missions/engine/icebound/iceboundEngine.ts'
+import type { GameInitializationOptions } from '../types/iceboundIntegration.ts'
+import { commissionIceboundOutpost, createIceboundPlanningState, createInitialIceboundReadiness, reduceIceboundAction, refreshIceboundStatus } from './iceboundIntegration.ts'
+import { resolveResourceEffects } from './resourceEffects.ts'
+export { MAX_RESOURCE_VALUE } from './resourceEffects.ts'
 
 export const INITIAL_RESOURCES = {
   power: 100,
@@ -11,7 +16,6 @@ export const INITIAL_RESOURCES = {
 } as const
 
 export const MAX_ACTIONS_PER_SOL = 2
-export const MAX_RESOURCE_VALUE = 100
 const DEFAULT_CARGO_CAPACITY_UNITS = 30
 
 export function getActionSlotCost(category: ActionCategory): 0 | 1 {
@@ -31,7 +35,7 @@ export function getActionSlotCost(category: ActionCategory): 0 | 1 {
   }
 }
 
-export function createInitialGameState(): GameState {
+export function createInitialGameState(options: GameInitializationOptions = {}): GameState {
   return {
     phase: 'menu',
     sol: 0,
@@ -63,6 +67,11 @@ export function createInitialGameState(): GameState {
     protection: { storm: false, radiation: false },
     outcome: null,
     feedback: null,
+    icebound: createIceboundState(options.runId ?? 'game-1', options.scenarioId),
+    iceboundPlanning: createIceboundPlanningState(),
+    iceboundReadiness: createInitialIceboundReadiness(options),
+    appliedResolutionIds: [],
+    iceboundEvents: [],
   }
 }
 
@@ -136,27 +145,16 @@ function applyMissionTransition(state: GameState, intent: MissionProgressionInte
     return withFeedback(state, 'The mission transition could not be completed.', 'error')
   }
 
-  const proposedResources = { ...state.resources }
-  let resourcesChanged = false
   for (const [resource, required] of Object.entries(resolution.resourceRequirements) as [keyof Resources, number][]) {
-    if (!Number.isFinite(required) || required < 0 || proposedResources[resource] < required) {
+    if (!Number.isFinite(required) || required < 0 || state.resources[resource] < required) {
       return withFeedback(state, `Not enough ${resource} to complete this mission transition.`, 'error')
     }
   }
+  const resourceResult = resolveResourceEffects(state.resources, resolution.effects.map((effect) => effect.resourceDeltas))
+  if (!resourceResult.allowed) return withFeedback(state, resourceResult.reason, 'error')
 
   const objectiveChanges = new Map<string, boolean>()
   for (const effect of resolution.effects) {
-    for (const [resource, delta] of Object.entries(effect.resourceDeltas) as [keyof Resources, number][]) {
-      if (!Number.isFinite(delta)) {
-        return withFeedback(state, `The proposed ${resource} change is invalid.`, 'error')
-      }
-      const nextValue = proposedResources[resource] + delta
-      if (nextValue < 0 || nextValue > MAX_RESOURCE_VALUE) {
-        return withFeedback(state, `The proposed ${resource} balance is outside its safe range.`, 'error')
-      }
-      proposedResources[resource] = nextValue
-      resourcesChanged ||= nextValue !== state.resources[resource]
-    }
     for (const change of effect.objectiveChanges) {
       const alreadyCompleted = state.objectives.some(
         (objective) => objective.id === change.objectiveId && objective.completed,
@@ -168,12 +166,6 @@ function applyMissionTransition(state: GameState, intent: MissionProgressionInte
     }
   }
 
-  for (const [resource, value] of Object.entries(proposedResources) as [keyof Resources, number][]) {
-    if (!Number.isFinite(value) || value < 0 || value > MAX_RESOURCE_VALUE) {
-      return withFeedback(state, `The ${resource} balance is outside its safe range.`, 'error')
-    }
-  }
-
   const objectives = [...state.objectives]
   for (const [id, completed] of objectiveChanges) {
     const index = objectives.findIndex((objective) => objective.id === id)
@@ -181,10 +173,10 @@ function applyMissionTransition(state: GameState, intent: MissionProgressionInte
     else objectives[index] = { ...objectives[index]!, completed }
   }
 
-  return {
+  const nextState: GameState = {
     ...state,
     phase: resolution.nextPhase,
-    resources: resourcesChanged ? proposedResources : state.resources,
+    resources: resourceResult.resources,
     objectives,
     selectedLandingSite: intent.type === 'SELECT_LANDING_SITE' ? intent.siteId : state.selectedLandingSite,
     outcome: resolution.debrief?.outcome ?? state.outcome,
@@ -194,12 +186,20 @@ function applyMissionTransition(state: GameState, intent: MissionProgressionInte
       feedbackId: resolution.effects[0]?.feedbackId ?? null,
     },
   }
+  return intent.type === 'SELECT_LANDING_SITE' ? commissionIceboundOutpost(nextState) : refreshIceboundStatus(nextState)
 }
 
 export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'RESET_GAME':
-      return createInitialGameState()
+      return createInitialGameState({ runId: state.icebound.runId, scenarioId: state.icebound.scenarioId,
+        installedCapabilities: state.iceboundReadiness.baselineCapabilities })
+
+    case 'ICEBOUND_COMMAND':
+    case 'SET_ICEBOUND_EXPEDITION_PLAN':
+    case 'REVIEW_ICEBOUND_EXPEDITION_PLAN':
+    case 'CONFIRM_ICEBOUND_EXPEDITION_PLAN':
+      return reduceIceboundAction(state, action)
 
     case 'START_GAME':
       return applyMissionTransition(state, action)
@@ -219,12 +219,12 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (isTerminal(state)) return reject(action, 'game is terminal')
       if (state.phase !== 'outpost') return reject(action, 'sols can only advance during outpost gameplay')
       if (state.sol >= state.actionLimits.maxSol) return reject(action, 'maximum sol reached')
-      return {
+      return refreshIceboundStatus({
         ...state,
         sol: state.sol + 1,
         completedSol: state.sol + 1,
         actionsRemaining: state.actionLimits.maxActionsPerSol,
-      }
+      })
 
     case 'SPEND_ACTION_SLOT': {
       if (isTerminal(state)) return reject(action, 'game is terminal')
@@ -234,11 +234,11 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (state.spentActionIds.includes(actionId)) return reject(action, 'action has already been completed')
       const cost = getActionSlotCost(action.category)
       if (state.actionsRemaining < cost) return reject(action, 'no major actions remain this sol')
-      return {
+      return refreshIceboundStatus({
         ...state,
         actionsRemaining: state.actionsRemaining - cost,
         spentActionIds: [...state.spentActionIds, actionId],
-      }
+      })
     }
 
     case 'CHOOSE_STORY_OPTION':
@@ -256,7 +256,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     default: {
       const exhaustiveAction: never = action
-      return exhaustiveAction
+      void exhaustiveAction
+      return reject(action, 'unsupported action')
     }
   }
 }
