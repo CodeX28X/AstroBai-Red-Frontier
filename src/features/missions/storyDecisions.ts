@@ -1,6 +1,8 @@
 import type { GamePhase, Resources } from '../../shared/types/game.ts'
 
-export type StoryDecisionChapter = Extract<GamePhase, 'launch' | 'travel' | 'landing'>
+/** Compatibility content only; travel is not reintroduced into shared MVP GamePhase. */
+export type LegacyStoryPhase = GamePhase | 'travel'
+export type StoryDecisionChapter = Extract<LegacyStoryPhase, 'launch' | 'travel' | 'landing'>
 
 export interface StoryDecisionPrerequisites {
   /** Chapters that must already have a recorded choice. */
@@ -13,7 +15,7 @@ export interface StoryDecisionDefinition {
   title: string
   description: string
   resourceEffectProposal: Partial<Resources>
-  nextPhase: GamePhase
+  nextPhase: LegacyStoryPhase
   educationalFeedbackId: string
   prerequisites: StoryDecisionPrerequisites
 }
