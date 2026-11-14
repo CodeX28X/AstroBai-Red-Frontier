@@ -1,10 +1,11 @@
+import type { PreparationState } from '../../features/missions/types/preparationEngine.ts'
+
 export type GamePhase =
   | 'menu'
+  | 'preparation'
   | 'launch'
-  | 'travel'
   | 'landing'
   | 'outpost'
-  | 'return'
   | 'debrief'
 
 export interface Resources {
@@ -63,9 +64,12 @@ export interface GameFeedback {
 export interface GameState {
   phase: GamePhase
   sol: number
+  completedSol: number
   actionsRemaining: number
   spentActionIds: string[]
   resources: Resources
+  preparation: PreparationState
+  selectedLandingSite: string | null
   facilities: Record<BuildingId, BuildingStatus>
   missions: Record<MissionId, MissionStatus>
   objectives: ObjectiveState[]
@@ -80,6 +84,13 @@ export type GameAction =
   | { type: 'START_GAME' }
   | { type: 'ADVANCE_SOL' }
   | { type: 'RESET_GAME' }
+  | { type: 'SET_EQUIPMENT_QUANTITY'; equipmentId: string; quantity: number }
+  | { type: 'REVIEW_MANIFEST' }
+  | { type: 'CONFIRM_MANIFEST' }
+  | { type: 'BEGIN_LAUNCH' }
+  | { type: 'COMPLETE_LAUNCH' }
+  | { type: 'SELECT_LANDING_SITE'; siteId: string }
+  | { type: 'ENTER_DEBRIEF' }
   | { type: 'SET_PHASE'; phase: GamePhase }
   | { type: 'UPDATE_RESOURCES'; deltas: Partial<Resources> }
   | { type: 'SET_FACILITY_STATUS'; buildingId: BuildingId; status: BuildingStatus }
@@ -88,5 +99,6 @@ export type GameAction =
   | { type: 'SET_ACTIVE_EVENT'; eventId: string | null }
   | { type: 'SET_PROTECTION'; protection: Partial<ProtectionState> }
   | { type: 'SET_OUTCOME'; outcome: Exclude<GameOutcome, null> }
+  /** @deprecated Legacy opening-story UI action; the MVP flow uses mission actions above. */
   | { type: 'CHOOSE_STORY_OPTION'; optionId: string }
   | { type: 'SPEND_ACTION_SLOT'; actionId: string; category: MajorActionCategory }
