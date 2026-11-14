@@ -30,7 +30,11 @@ Keep feature internals private. Shared types belong in `src/shared/types`; avoid
 2. The application submits the proposal through a typed action to C's reducer. The reducer validates the mission and proposal against the current state and rejects invalid or stale effects.
 3. Only the reducer applies accepted resource deltas and objective changes, as one state transition. A proposal is applied exactly once; frontends never replay effects or update resource fields directly.
 
-The current Phase 2 reducer deliberately rejects all actions other than start, reset, and sol advancement. Validation and effect application will be added only when the mission resolution action is agreed and implemented.
+## Opening story integration
+
+The opening story uses `CHOOSE_STORY_OPTION`. The reducer calls D's pure resolver, validates returned resource requirements and deltas, then atomically applies resource changes, completion markers, phase transition, and feedback. Completed choices are recorded as objective IDs prefixed with `story-decision:`; the marker prevents a later duplicate effect.
+
+Changes to `GameState`, `GameAction`, and the shared reducer require Developer C review before merge. Other unimplemented gameplay actions remain rejected.
 
 ## Draft P0/P1 contract proposal — pending owner review
 

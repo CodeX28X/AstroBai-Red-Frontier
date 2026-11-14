@@ -42,6 +42,12 @@ export interface ProtectionState {
 
 export type GameOutcome = 'success' | 'failure' | null
 
+export interface GameFeedback {
+  kind: 'success' | 'error'
+  message: string
+  feedbackId: string | null
+}
+
 export interface GameState {
   phase: GamePhase
   sol: number
@@ -53,6 +59,7 @@ export interface GameState {
   actionLimits: ActionLimits
   protection: ProtectionState
   outcome: GameOutcome
+  feedback: GameFeedback | null
 }
 
 export type GameAction =
@@ -67,3 +74,4 @@ export type GameAction =
   | { type: 'SET_ACTIVE_EVENT'; eventId: string | null }
   | { type: 'SET_PROTECTION'; protection: Partial<ProtectionState> }
   | { type: 'SET_OUTCOME'; outcome: Exclude<GameOutcome, null> }
+  | { type: 'CHOOSE_STORY_OPTION'; optionId: string }
