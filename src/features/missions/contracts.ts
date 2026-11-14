@@ -1,4 +1,4 @@
-﻿import type { MissionId, Resources } from '../../shared/types/game.ts'
+﻿import type { GamePhase, MissionId, Resources } from '../../shared/types/game.ts'
 
 export interface MissionObjectiveDefinition {
   id: string
@@ -27,7 +27,13 @@ export interface MissionEffect {
 export interface MissionResolution {
   allowed: boolean
   success: boolean
-  reason: string
+  reason: string | null
+  nextPhase: GamePhase | null
+  completedDecisionId: string | null
+  feedbackId: string | null
+  feedbackMessage: string
+  /** Minimum balances required before applying the proposed resource deltas. */
+  resourceRequirements: Partial<Resources>
   proposedEffects: MissionEffect[]
 }
 
