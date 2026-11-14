@@ -1,4 +1,4 @@
-﻿import type { GamePhase, MissionId, Resources } from '../../shared/types/game.ts'
+import type { GamePhase, MissionId, Resources } from '../../shared/types/game.ts'
 
 export interface MissionObjectiveDefinition {
   id: string

@@ -1,4 +1,4 @@
-﻿import type { GameAction, GameState, Resources } from '../types/game.ts'
+import type { ActionCategory, GameAction, GameState, Resources } from '../types/game.ts'
 import { resolveStoryDecision } from '../../features/missions/resolveStoryDecision.ts'
 import type { MissionEffect, MissionResolution } from '../../features/missions/contracts.ts'
 
@@ -9,10 +9,31 @@ export const INITIAL_RESOURCES = {
   food: 100,
 } as const
 
+export const MAX_ACTIONS_PER_SOL = 2
+
+export function getActionSlotCost(category: ActionCategory): 0 | 1 {
+  switch (category) {
+    case 'facility-inspection':
+    case 'power-allocation':
+      return 0
+    case 'operation':
+    case 'repair':
+    case 'event-response':
+    case 'exploration':
+      return 1
+    default: {
+      const exhaustiveCategory: never = category
+      return exhaustiveCategory
+    }
+  }
+}
+
 export function createInitialGameState(): GameState {
   return {
     phase: 'menu',
     sol: 0,
+    actionsRemaining: MAX_ACTIONS_PER_SOL,
+    spentActionIds: [],
     resources: { ...INITIAL_RESOURCES },
     facilities: {
       habitat: 'unbuilt',
@@ -28,7 +49,7 @@ export function createInitialGameState(): GameState {
     },
     objectives: [],
     activeEvent: null,
-    actionLimits: { maxSol: 100 },
+    actionLimits: { maxSol: 10, maxActionsPerSol: MAX_ACTIONS_PER_SOL },
     protection: { storm: false, radiation: false },
     outcome: null,
     feedback: null,
@@ -145,7 +166,26 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       if (isTerminal(state)) return reject(action, 'game is terminal')
       if (state.phase === 'menu') return reject(action, 'game has not started')
       if (state.sol >= state.actionLimits.maxSol) return reject(action, 'maximum sol reached')
-      return { ...state, sol: state.sol + 1 }
+      return {
+        ...state,
+        sol: state.sol + 1,
+        actionsRemaining: state.actionLimits.maxActionsPerSol,
+      }
+
+    case 'SPEND_ACTION_SLOT': {
+      if (isTerminal(state)) return reject(action, 'game is terminal')
+      if (state.phase !== 'outpost') return reject(action, 'major actions are only available at the outpost')
+      if (!action.actionId.trim()) return reject(action, 'action ID is required')
+      const actionId = action.actionId.trim()
+      if (state.spentActionIds.includes(actionId)) return reject(action, 'action has already been completed')
+      const cost = getActionSlotCost(action.category)
+      if (state.actionsRemaining < cost) return reject(action, 'no major actions remain this sol')
+      return {
+        ...state,
+        actionsRemaining: state.actionsRemaining - cost,
+        spentActionIds: [...state.spentActionIds, actionId],
+      }
+    }
 
     case 'CHOOSE_STORY_OPTION':
       return applyStoryResolution(state, resolveStoryDecision(state, action.optionId))
