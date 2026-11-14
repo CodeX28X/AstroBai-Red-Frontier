@@ -30,7 +30,7 @@ test('starts the game in preparation phase', () => {
   assert.equal(initial.phase, 'menu')
 })
 
-test('advances a sol without changing resources', () => {
+test('advances a sol with exactly one unit consumed per resource', () => {
   const started = createOutpostState()
   const advanced = gameReducer(started, { type: 'ADVANCE_SOL' })
   assert.equal(started.sol, 1)
@@ -38,7 +38,7 @@ test('advances a sol without changing resources', () => {
   assert.equal(advanced.sol, 2)
   assert.equal(advanced.completedSol, 1)
   assert.equal(advanced.actionsRemaining, 2)
-  assert.deepEqual(advanced.resources, started.resources)
+  for(const key of Object.keys(started.resources))assert.equal(advanced.resources[key],started.resources[key]-1)
 })
 
 test('major action categories cost one slot while inspection and allocation are free', () => {
@@ -132,7 +132,7 @@ test('rejects a third major action without consuming another slot', () => {
 })
 
 test('successful sol advancement resets action slots to two', () => {
-  const outpost = { ...createInitialGameState(), phase: 'outpost' }
+  const outpost = createOutpostState()
   const spent = gameReducer(outpost, {
     type: 'SPEND_ACTION_SLOT',
     actionId: 'action-1',
@@ -140,7 +140,7 @@ test('successful sol advancement resets action slots to two', () => {
   })
   const advanced = gameReducer(spent, { type: 'ADVANCE_SOL' })
 
-  assert.equal(advanced.sol, 1)
+  assert.equal(advanced.sol, 2)
   assert.equal(advanced.actionsRemaining, 2)
 })
 

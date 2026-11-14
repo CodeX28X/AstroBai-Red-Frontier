@@ -2,7 +2,7 @@
 
 ## Current playable integration
 
-The resource-balancing follow-up uses direct 0–10 resource units and 35 cargo spaces. Selection storage starts empty; START_GAME selects 5 each, and confirmation copies the exact selection into GameState resources once. Standard science capabilities allow ICEBOUND without optional cargo; optional equipment IDs are never auto-added. ResourceHud reads the authoritative resources directly. `supplyBalance.ts` centralizes supply/cargo/status values; landing and ICEBOUND cost definitions remain feature-owned. Save v3 replays new-scale histories and explicitly rejects older scales. Dialogue, guidance, artwork and map geometry are unchanged. See `docs/resource-balancing-report.md` for current evidence.
+The current gameplay fixes keep 0–10 resources, 35 cargo spaces and the default 5-each loadout. `features/simulation/outpostSystems.ts` owns pure production/consumption rules; the central reducer commits resources, one-job costs, per-sol operation locks, consumed-sol records and natural supply failure atomically. Standard capabilities and selectable operational optional cargo are listed separately. ICEBOUND retains per-site investigation records plus cumulative samples, analyses, costs and global progress; site-scoped markers prevent replay. The existing science classifier is unchanged. ResourceHud reads authoritative resources; compact/minimized HUD state is presentation-only. Save v4 replays current-rule histories and rejects older histories that lacked daily consumption. See `docs/gameplay-fixes-report.md`.
 
 `src/app/App.tsx` mounts `AdventureExperience`. Feature-owned preparation, map, interiors and mission panels read `GameProvider`; typed player intents go to the existing reducer and mission engines. The old A/B previews remain available for independent design review.
 
@@ -12,7 +12,7 @@ The resource-balancing follow-up uses direct 0–10 resource units and 35 cargo 
 - D: existing preparation, progression and ICEBOUND engines retain eligibility, costs and scientific classifications. The final-sol boundary now distinguishes playing Sol 10 from completing it.
 - E: cached, typed NASA science summaries live in `src/data/nasa/scienceFacts.ts`, with source links and real/fictional labels. Core gameplay makes no network requests.
 
-Recurring resource rates, power allocation, damage/repair events, solar-storm operations, crew health and partial-success thresholds are still absent. The older contract proposals below do not supply executable rules for them. See `docs/integration-contract.md` and `docs/overhaul-report.md`.
+Daily consumption and manual facility production are implemented. Power allocation, damage/repair events, solar-storm operations, separate crew health and partial-success thresholds remain absent. No passive generation is added. Earlier implementation reports are historical; `docs/integration-contract.md` records the current rules.
 
 ## Foundation
 

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { maintainOutpost } from './gameplayTestSupport.mjs'
 import { createInitialGameState, gameReducer, INITIAL_GAME_STATE } from './gameReducer.ts'
 import { applyIceboundResolution } from './iceboundIntegration.ts'
 import { selectIceboundContext, selectIceboundView } from './iceboundSelectors.ts'
@@ -18,7 +19,7 @@ function outpost(options = {}, equipment = cargo) {
 }
 function ready(options = {}, equipment = cargo) {
   let state = outpost(options, equipment)
-  while (state.sol < 3) state = gameReducer(state, { type: 'ADVANCE_SOL' })
+  while (state.sol < 3) state = gameReducer(maintainOutpost(state), { type: 'ADVANCE_SOL' })
   return state
 }
 function selected(siteId = 'icebound.lumen-shelf', options = {}) {
@@ -184,7 +185,7 @@ test('sampling and analysis are separate operations across C sol resets', () => 
   assertRejected(executed, dispatch(executed, { type: 'COLLECT_SAMPLE', method: 'subsurface-drilling' }))
   const advanced = gameReducer(executed, { type: 'ADVANCE_SOL' })
   assert.deepEqual(advanced.icebound, executed.icebound)
-  assert.deepEqual(advanced.resources, executed.resources)
+  for(const key of Object.keys(executed.resources))assert.equal(advanced.resources[key],executed.resources[key]-1)
   assert.equal(advanced.actionsRemaining, 2)
   const next = dispatch(advanced, { type: 'COLLECT_SAMPLE', method: 'subsurface-drilling' })
   assert.equal(next.icebound.samples.length, 1)
@@ -293,14 +294,14 @@ test('full reducer-only ICEBOUND playthrough completes by Sol 4 and preserves th
   state = dispatch(state, { type: 'GENERATE_REPORT' })
   assert.equal(state.sol, 4)
   assert.equal(state.actionsRemaining, 0)
-  assert.deepEqual(state.resources, { power: 0, oxygen: 6, water: 5, food: 5 })
+  assert.deepEqual(state.resources, { power: 3, oxygen: 3, water: 6, food: 6 })
   assert.equal(state.appliedResolutionIds.length, 7)
   assert.equal(state.iceboundEvents.length, 7)
-  assert.equal(state.spentActionIds.length, 4)
+  assert.equal(state.spentActionIds.filter(id=>id.startsWith('icebound:')).length, 4)
   assert.equal(state.icebound.completedObjectives.length, 6)
   assert.equal(selectIceboundView(state).status, 'completed')
   const report = state.icebound.report
-  while (state.completedSol < 10) state = gameReducer(state, { type: 'ADVANCE_SOL' })
+  while (state.completedSol < 10) state = gameReducer(maintainOutpost(state), { type: 'ADVANCE_SOL' })
   assert.equal(state.icebound.report, report)
   state = gameReducer(state, { type: 'ENTER_DEBRIEF' })
   assert.equal(state.phase, 'debrief')

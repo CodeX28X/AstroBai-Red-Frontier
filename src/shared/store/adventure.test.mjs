@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { maintainOutpost } from './gameplayTestSupport.mjs'
 import assert from 'node:assert/strict'
 import { createInitialGameState, gameReducer } from './gameReducer.ts'
 import { CAMPAIGN_OPTIONS } from './campaign.ts'
@@ -9,7 +10,7 @@ import { SCIENCE_FACTS, FICTION_NOTE } from '../../data/nasa/scienceFacts.ts'
 function campaign(site='icebound.lumen-shelf',method='rover-only',activity='subsurface-drilling') {
   let state=createInitialGameState(CAMPAIGN_OPTIONS)
   const actions=[]
-  const send=action=>{const next=gameReducer(state,action);assert.notEqual(next.feedback?.kind,'error',next.feedback?.message);state=next;actions.push(action);return state}
+  const send=action=>{if(action.type==='ADVANCE_SOL')state=maintainOutpost(state,send);const next=gameReducer(state,action);assert.notEqual(next.feedback?.kind,'error',next.feedback?.message);state=next;actions.push(action);return state}
   send({type:'START_GAME'})
   for(const [supplyId,quantity] of Object.entries({power:5,oxygen:5,water:5,food:5})) send({type:'SET_SUPPLY_QUANTITY',supplyId,quantity})
   for(const equipmentId of ['field-rover','repair-toolkit','soil-analysis-kit','sample-container-set','portable-oxygen-kit']) send({type:'SET_EQUIPMENT_QUANTITY',equipmentId,quantity:1})
@@ -70,7 +71,7 @@ test('a rejected operation does not poison later successful saves or sol progres
   const rejected=gameReducer(run.state,{type:'ICEBOUND_COMMAND',intent:{type:'RECON'}})
   assert.equal(rejected.feedback.kind,'error')
   const recovered=gameReducer(rejected,{type:'ADVANCE_SOL'})
-  assert.equal(recovered.feedback,null)
+  assert.equal(recovered.feedback.kind,'success')
   const loaded=decodeSave(encodeSave([...run.actions,{type:'ADVANCE_SOL'}])).state
   assert.deepEqual(loaded,recovered)
 })

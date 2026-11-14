@@ -17,6 +17,7 @@ export function selectIceboundView(state: GameState) {
     ...status,
     activeObjective: status.objectives.find((objective) => objective.status === 'active' || objective.status === 'available')?.id ?? null,
     sites: listResearchSites(context),
+    completedSites: state.icebound.investigations.filter(site=>site.report),
     plan: plan ? structuredClone(plan) : null,
     planningStatus: state.icebound.expedition ? 'executed' : state.icebound.approvedPlan ? 'confirmed' :
       state.iceboundPlanning.reviewedRevision === state.iceboundPlanning.revision && state.iceboundPlanning.review ? 'reviewed' : 'editing',

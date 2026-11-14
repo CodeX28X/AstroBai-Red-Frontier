@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { maintainOutpost } from '../../../shared/store/gameplayTestSupport.mjs'
 import { gameReducer, createInitialGameState } from '../../../shared/store/gameReducer.ts'
 import { createIceboundState, iceboundEngine } from '../engine/icebound/index.ts'
 
@@ -10,7 +11,7 @@ export function fixture(scenarioId = 'icebound.training-v1') {
   for (const equipmentId of equipmentIds) game = gameReducer(game, { type: 'SET_EQUIPMENT_QUANTITY', equipmentId, quantity: 1 })
   for (const type of ['REVIEW_MANIFEST', 'CONFIRM_MANIFEST', 'BEGIN_LAUNCH', 'COMPLETE_LAUNCH']) game = gameReducer(game, { type })
   game = gameReducer(game, { type: 'SELECT_LANDING_SITE', siteId: 'landing-safe-zone' })
-  while (game.sol < 3) game = gameReducer(game, { type: 'ADVANCE_SOL' })
+  while (game.sol < 3) game = gameReducer(maintainOutpost(game), { type: 'ADVANCE_SOL' })
   return {
     game: { ...game, facilities: { ...game.facilities, habitat: 'operational' } },
     mission: createIceboundState('test-run', scenarioId),

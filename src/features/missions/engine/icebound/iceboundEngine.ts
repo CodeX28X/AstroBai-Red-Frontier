@@ -10,17 +10,18 @@ import { validateObjective } from './objectives.ts'
 import { evaluateResearchSite, reviewExpeditionPlan } from './planning.ts'
 import { evaluateSampleAnalysis, generateScienceReport } from './science.ts'
 import { availableEquipment, baseIssues, balanceFor, capabilitiesFor, costIssues, fieldIssues, samplingCost, scenarioFor } from './readiness.ts'
+import { activeObjectives, objectiveMarker, operationKey } from './siteProgress.ts'
 
 export function createIceboundState(runId: string, scenarioId: IceboundScenarioId = 'icebound.training-v1'): IceboundState {
   if (!runId.trim() || !ICEBOUND_SCENARIOS.some((scenario) => scenario.id === scenarioId)) {
     throw new Error('ICEBOUND needs a non-empty mission run ID and a known scenario.')
   }
-  return { runId, scenarioId, revision: 0, completedObjectives: [], resolvedOperationIds: [], observations: [],
+  return { runId, scenarioId, revision: 0, investigations: [], completedObjectives: [], resolvedOperationIds: [], observations: [],
     selectedSiteId: null, approvedPlan: null, expedition: null, samples: [], analyses: [], costs: [], report: null }
 }
 
-function envelope(context: IceboundContext, operationId: string) {
-  return { resolutionId: `icebound:${encodeURIComponent(context.mission.runId)}:${operationId}`,
+function envelope(context: IceboundContext, operationId: string, siteId = context.mission.selectedSiteId) {
+  return { resolutionId: `icebound:${encodeURIComponent(context.mission.runId)}:${operationKey(context.mission,operationId,siteId)}`,
     expectedMissionRevision: context.mission.revision, expectedSol: context.game.sol }
 }
 function blocked(context: IceboundContext, operationId: string, code: IceboundIssueCode, reason: string): Extract<IceboundResolution, { allowed: false }> {
@@ -30,9 +31,9 @@ function blocked(context: IceboundContext, operationId: string, code: IceboundIs
 function guard(context: IceboundContext, operationId: string, objectiveId?: IceboundObjectiveId): IceboundResolution | null {
   const issues = baseIssues(context)
   if (issues.length) return blocked(context, operationId, issues[0]!.code, issues[0]!.explanation)
-  const objectiveMarker = objectiveId ?? 'icebound.expedition.executed'
-  if (context.mission.resolvedOperationIds.includes(operationId) || context.game.spentActionIds.includes(envelope(context, operationId).resolutionId) ||
-      context.game.objectives.some((item) => item.id === objectiveMarker && item.completed)) {
+  const marker = objectiveMarker(context.mission, objectiveId ?? 'icebound.expedition.executed')
+  if (context.mission.resolvedOperationIds.includes(operationKey(context.mission,operationId)) || context.game.spentActionIds.includes(envelope(context, operationId).resolutionId) ||
+      context.game.objectives.some((item) => item.id === marker && item.completed)) {
     return blocked(context, operationId, 'ALREADY_RESOLVED', 'This investigation operation has already been recorded.')
   }
   if (objectiveId) {
@@ -50,23 +51,39 @@ function finish(
   if (affordability.length) return blocked(context, operationId, affordability[0]!.code, affordability[0]!.explanation)
   const definition = ICEBOUND_OBJECTIVES.find((objective) => objective.id === objectiveId)!
   const feedbackId = completeObjective ? definition.feedbackId : 'icebound.expedition.executed'
+  const siteId = patch.selectedSiteId ?? context.mission.selectedSiteId
+  const key = operationKey(context.mission,operationId,siteId)
+  const investigations = [...context.mission.investigations]
+  if (siteId) {
+    const index = investigations.findIndex(site=>site.siteId===siteId)
+    const previous = investigations[index] ?? {siteId,completedObjectives:[],approvedPlan:null,expedition:null,report:null}
+    const site = {...previous,
+      completedObjectives:completeObjective ? [...new Set([...previous.completedObjectives,objectiveId])] : previous.completedObjectives,
+      approvedPlan:patch.approvedPlan === undefined ? previous.approvedPlan : patch.approvedPlan,
+      expedition:patch.expedition === undefined ? previous.expedition : patch.expedition,
+      report:patch.report === undefined ? previous.report : patch.report}
+    if (index<0) investigations.push(site); else investigations[index]=site
+  }
   const nextMissionState: IceboundState = structuredClone({
-    ...context.mission, ...patch, revision: context.mission.revision + 1,
-    completedObjectives: completeObjective ? [...context.mission.completedObjectives, objectiveId] : [...context.mission.completedObjectives],
-    resolvedOperationIds: [...context.mission.resolvedOperationIds, operationId],
-    costs: actionSlots || Object.keys(costs).length ? [...context.mission.costs, { operationId, sol: context.game.sol, resources: { ...costs }, actionSlots }] : [...context.mission.costs],
+    ...context.mission, ...patch, investigations, revision: context.mission.revision + 1,
+    completedObjectives: completeObjective ? [...new Set([...context.mission.completedObjectives, objectiveId])] : [...context.mission.completedObjectives],
+    resolvedOperationIds: [...context.mission.resolvedOperationIds, key],
+    costs: actionSlots || Object.keys(costs).length ? [...context.mission.costs, { operationId:key, sol: context.game.sol, resources: { ...costs }, actionSlots }] : [...context.mission.costs],
   })
   const resourceDeltas: Partial<Resources> = {}
   for (const [resource, cost] of Object.entries(costs) as [keyof Resources, number][]) resourceDeltas[resource] = -cost
-  return { ...envelope(context, operationId), allowed: true, code: 'ALLOWED', reason: null,
+  const marker = objectiveMarker(context.mission,completeObjective ? objectiveId : 'icebound.expedition.executed',siteId)
+  const objectiveChanges = [{objectiveId:marker,completed:true}]
+  if (completeObjective && marker!==objectiveId && !context.mission.completedObjectives.includes(objectiveId)) objectiveChanges.push({objectiveId,completed:true})
+  return { ...envelope(context, operationId,siteId), allowed: true, code: 'ALLOWED', reason: null,
     feedbackIds: [feedbackId],
-    event: { objectiveId, eventId: `icebound.event.${operationId}`, feedbackId,
+    event: { objectiveId, eventId: `icebound.event.${key}`, feedbackId,
       outcomeId: nextMissionState.report?.outcomeId ?? null, scienceReferenceIds: [...definition.scienceReferenceIds],
-      contextualTags: ['fictional-scenario', operationId] },
+      contextualTags: ['fictional-scenario', key] },
     proposedEffects: { resourceDeltas, actionSlotCost: actionSlots,
       actionCategory: operationId === 'recon' || operationId === 'expedition' ? 'exploration' : 'operation',
-      equipmentStatusChanges: [], objectiveChanges: [{ objectiveId: completeObjective ? objectiveId : 'icebound.expedition.executed', completed: true }],
-      missionStatus: nextMissionState.completedObjectives.includes('icebound.science-report') ? 'completed' : 'active', nextMissionState },
+      equipmentStatusChanges: [], objectiveChanges,
+      missionStatus: nextMissionState.investigations.some(site=>site.report) ? 'completed' : 'active', nextMissionState },
   }
 }
 
@@ -86,14 +103,16 @@ export function resolveReconnaissance(context: IceboundContext): IceboundResolut
 }
 
 export function selectResearchSite(context: IceboundContext, siteId: string): IceboundResolution {
-  const rejected = guard(context, 'select-site', 'icebound.site-selection')
-  if (rejected) return rejected
+  const issues = baseIssues(context)
+  if (issues[0]) return blocked(context,'select-site',issues[0].code,issues[0].explanation)
+  if (context.mission.selectedSiteId && !context.mission.report) return blocked(context,'select-site','INVESTIGATION_ACTIVE','Finish the current investigation and record its report first.')
+  if (context.mission.investigations.some(site=>site.siteId===siteId && site.report)) return blocked(context,'select-site','SITE_COMPLETED','This research site already has a recorded report.')
   const assessment = evaluateResearchSite(context, siteId)
   if (!assessment.allowed || !assessment.site) {
     const issue = assessment.issues[0]!
     return blocked(context, 'select-site', issue.code, issue.explanation)
   }
-  return finish(context, 'select-site', 'icebound.site-selection', { selectedSiteId: assessment.site.id })
+  return finish(context, 'select-site', 'icebound.site-selection', { selectedSiteId: assessment.site.id, approvedPlan:null,expedition:null,report:null })
 }
 
 export function approveExpeditionPlan(context: IceboundContext, plan: ExpeditionPlan): IceboundResolution {
@@ -108,7 +127,7 @@ export function resolveExpedition(context: IceboundContext): IceboundResolution 
   const rejected = guard(context, 'expedition')
   if (rejected) return rejected
   const plan = context.mission.approvedPlan
-  if (!plan || !context.mission.completedObjectives.includes('icebound.expedition-plan')) {
+  if (!plan || !activeObjectives(context.mission).includes('icebound.expedition-plan')) {
     return blocked(context, 'expedition', 'APPROVED_PLAN_REQUIRED', 'Review and approve a field plan first.')
   }
   // Never trust an earlier review after resources, hazards or equipment readiness change.
@@ -150,7 +169,7 @@ export function resolveSampling(context: IceboundContext, method: SamplingMethod
     observation: method === 'subsurface-drilling' ? 'A fictional subsurface sample was collected and labeled.' : 'A fictional surface sample was collected and labeled. It does not describe deeper material.',
     scienceReferenceIds: ['nasa-perseverance-objectives', 'nasa-swim'],
   }
-  return finish(context, 'collect-sample', 'icebound.sample-collection', { samples: [sample] }, samplingCost(context, method), 1)
+  return finish(context, 'collect-sample', 'icebound.sample-collection', { samples: [...context.mission.samples,sample] }, samplingCost(context, method), 1)
 }
 
 export function analyzeSamples(context: IceboundContext, sampleId: string): IceboundResolution {
@@ -168,7 +187,7 @@ export function analyzeSamples(context: IceboundContext, sampleId: string): Iceb
   if (analysis.classification === 'analysis-incomplete') {
     return { ...blocked(context, 'analyze-sample', 'ANALYSIS_INCOMPLETE', analysis.conclusion), analysis }
   }
-  return finish(context, 'analyze-sample', 'icebound.lab-analysis', { analyses: [analysis] }, balanceFor(context).analysis, 1)
+  return finish(context, 'analyze-sample', 'icebound.lab-analysis', { analyses: [...context.mission.analyses,analysis] }, balanceFor(context).analysis, 1)
 }
 
 export function resolveScienceReport(context: IceboundContext): IceboundResolution {

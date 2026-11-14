@@ -1,5 +1,6 @@
 import type { IceboundAnalysis, IceboundContext, IceboundSample, IceboundScienceReport } from '../../types/icebound.ts'
 import { scenarioFor } from './readiness.ts'
+import { activeObjectives, currentSamples, currentAnalyses } from './siteProgress.ts'
 
 /** Scenario truth and investigation quality are separate inputs. No equipment can create ice. */
 export function evaluateSampleAnalysis(context: IceboundContext, sample: IceboundSample): IceboundAnalysis {
@@ -39,7 +40,7 @@ export function generateScienceReport(context: IceboundContext): IceboundScience
     mission.samples.some((sample) => sample.id === analysis.sampleId && sample.status === 'collected' &&
       sample.expeditionId === mission.expedition?.id && sample.siteId === mission.selectedSiteId && sample.scenarioId === mission.scenarioId))
   const complete = ['icebound.recon', 'icebound.site-selection', 'icebound.expedition-plan', 'icebound.sample-collection', 'icebound.lab-analysis']
-    .every((id) => mission.completedObjectives.some((completed) => completed === id)) && finding !== undefined && mission.expedition !== null
+    .every((id) => activeObjectives(mission).some((completed) => completed === id)) && finding !== undefined && mission.expedition !== null
   const conclusion = complete ? finding.classification : null
   const outcomeId = !complete ? 'icebound.outcome.incomplete' : conclusion === 'supports-accessible-ice' ? 'icebound.outcome.supported-ice' :
     conclusion === 'no-accessible-ice-detected' ? 'icebound.outcome.negative' : 'icebound.outcome.inconclusive'
@@ -47,9 +48,9 @@ export function generateScienceReport(context: IceboundContext): IceboundScience
     outcomeId, completionStatus: complete ? 'complete' : 'incomplete', siteId: mission.selectedSiteId,
     reconnaissance: mission.observations, expeditionMethod: mission.expedition?.plan.method ?? null,
     expeditionObservations: mission.expedition?.observations ?? [],
-    equipmentIds: mission.expedition?.plan.equipmentIds ?? [], samples: mission.samples, findings: mission.analyses,
+    equipmentIds: mission.expedition?.plan.equipmentIds ?? [], samples: currentSamples(mission), findings: currentAnalyses(mission),
     conclusion, limitations: complete ? finding.limitations : ['The investigation has not produced a completed analysis. Do not interpret missing work as a negative finding.'],
-    operationalCosts: mission.costs, scienceReferenceIds: ['nasa-swim', 'nasa-perseverance-objectives', 'nasa-mars-2020'],
+    operationalCosts: mission.costs.filter(cost=>cost.operationId==='recon'||cost.operationId.startsWith(`${mission.selectedSiteId}:`)), scienceReferenceIds: ['nasa-swim', 'nasa-perseverance-objectives', 'nasa-mars-2020'],
     feedbackIds: [complete ? 'icebound.report.complete' : 'icebound.report.incomplete'],
   })
 }

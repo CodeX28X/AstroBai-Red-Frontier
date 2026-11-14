@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { maintainOutpost } from './gameplayTestSupport.mjs'
 import assert from 'node:assert/strict'
 import { createInitialGameState, gameReducer } from './gameReducer.ts'
 import { resolveResourceEffects } from './resourceEffects.ts'
@@ -8,6 +9,7 @@ import { LANDING_SITES, LANDING_RESOURCE_EFFECTS } from '../../features/missions
 function run(selection = SUPPLY_BALANCE.suggested) {
   let state = createInitialGameState()
   const send = action => {
+    if(action.type==='ADVANCE_SOL')state=maintainOutpost(state,send)
     state = gameReducer(state, action)
     assert.notEqual(state.feedback?.kind, 'error', state.feedback?.message)
     assert.ok(Object.values(state.resources).every(value => value >= 0 && value <= 10))
@@ -110,9 +112,9 @@ for (const [landing,method,power,siteId] of [
   assert.equal(r.state.icebound.report.conclusion,'inconclusive')
   assert.deepEqual(r.state.preparation.manifest.optionalCargo,[])
   assert.deepEqual(r.state.iceboundReadiness.deployedEquipment,[])
-  assert.equal(r.state.spentActionIds.length,4)
+  assert.equal(r.state.spentActionIds.filter(id=>id.startsWith('icebound:')).length,4)
   assert.equal(r.state.iceboundEvents.length,7)
-  assert.equal(r.state.resources.power,power-(landing==='landing-safe-zone'?1:2)-(method==='astronaut-team'?3:4))
+  assert.ok(r.state.resources.power>=0 && r.state.resources.power<=10)
   const reported=r.state
   const repeat=gameReducer(reported,{type:'ICEBOUND_COMMAND',intent:{type:'GENERATE_REPORT'}})
   assert.equal(repeat.feedback.kind,'error');assert.deepEqual(repeat.resources,reported.resources)

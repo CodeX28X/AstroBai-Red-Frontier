@@ -125,7 +125,15 @@ export interface IceboundScienceReport {
   feedbackIds: readonly string[]
 }
 /** Proposed slice for C's single store. All changes arrive through effect proposals. */
+export interface SiteInvestigation {
+  siteId: IceboundSiteId
+  completedObjectives: readonly IceboundObjectiveId[]
+  approvedPlan: ExpeditionPlan | null
+  expedition: ExecutedExpedition | null
+  report: IceboundScienceReport | null
+}
 export interface IceboundState {
+  investigations: readonly SiteInvestigation[]
   runId: string
   scenarioId: IceboundScenarioId
   revision: number
@@ -181,6 +189,7 @@ export type IceboundIssueCode =
   | 'ROVER_NOT_READY' | 'EXPEDITION_REQUIRED' | 'SAMPLING_CAPABILITY_REQUIRED' | 'SAMPLE_REQUIRED'
   | 'LAB_UNAVAILABLE' | 'REPORT_INCOMPLETE' | 'ALREADY_RESOLVED' | 'APPROVED_PLAN_REQUIRED'
   | 'METHOD_NOT_APPROVED' | 'SAMPLE_RECORD_MISMATCH' | 'ANALYSIS_INCOMPLETE' | 'UNSUPPORTED_INTENT'
+  | 'INVESTIGATION_ACTIVE' | 'SITE_COMPLETED'
 
 export interface IceboundIssue {
   code: IceboundIssueCode

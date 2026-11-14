@@ -11,7 +11,7 @@ export const SUPPLY_BALANCE = {
   resourcePerPack: { power: 1, oxygen: 1, water: 1, food: 1 },
   minimum: { power: 1, oxygen: 0, water: 0, food: 0 },
   suggested: { power: 5, oxygen: 5, water: 5, food: 5 },
-  statusBands: { needsHelpBelow: 2, watchBelow: 4 },
+  statusBands: { needsHelpBelow: 3, watchBelow: 4 },
 } as const
 export const SUPPLY_ITEMS = [
   { id: 'power', name: 'Energy Pack', benefit: '+1 Energy Supply', image: '/assets/supplies/energy.svg' },

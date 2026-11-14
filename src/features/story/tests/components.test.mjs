@@ -26,6 +26,9 @@ const entries = [
   ['createInitialGameState', '../../shared/store/gameReducer.ts'],
   ['gameReducer', '../../shared/store/gameReducer.ts'],
   ['ResourceHud', 'components/ResourceHud.tsx'],
+  ['ExpeditionEquipment', 'components/ExpeditionEquipment.tsx'],
+  ['FacilityProduction', 'components/FacilityProduction.tsx'],
+  ['selectIceboundContext', '../../shared/store/iceboundSelectors.ts'],
   ['CAMPAIGN_OPTIONS', '../../shared/store/campaign.ts'],
   ['MainMenu', 'components/MainMenu.tsx'],
   ['SceneFrame', 'components/SceneFrame.tsx'],
@@ -51,7 +54,7 @@ await build({
   },
 });
 const require = createRequire(import.meta.url);
-const { MainMenu, SceneFrame, OutpostSlot, DeveloperAExperience, FacilityInspection, PowerPlanPanel, experienceFixture, previewPresets, presetValidation, feedbackCopy, formatCopy, CharacterDialogue, AdventurePreparation, CHARACTERS, createInitialGameState, gameReducer, ResourceHud, CAMPAIGN_OPTIONS } = require(join(scratch, 'components.cjs'));
+const { MainMenu, SceneFrame, OutpostSlot, DeveloperAExperience, FacilityInspection, PowerPlanPanel, experienceFixture, previewPresets, presetValidation, feedbackCopy, formatCopy, CharacterDialogue, AdventurePreparation, CHARACTERS, createInitialGameState, gameReducer, ResourceHud, CAMPAIGN_OPTIONS, ExpeditionEquipment, FacilityProduction, selectIceboundContext } = require(join(scratch, 'components.cjs'));
 const render = (component, props) => renderToStaticMarkup(React.createElement(component, props));
 test('spoken dialogue has the correct replaceable portrait, name and continue control', () => {
   for (const [speakerId, speaker] of Object.entries(CHARACTERS)) {
@@ -86,6 +89,21 @@ test('HUD numbers and native progress bars follow each authoritative resource up
     assert.equal((html.match(/<progress/g) ?? []).length,4);
   }
   assert.deepEqual(state.resources, {power:0,oxygen:0,water:0,food:0});
+});
+
+test('equipment UI lists standard tools and only genuinely packed optional choices', () => {
+  let state=gameReducer(createInitialGameState(),{type:'START_GAME'});
+  function land(){for(const type of ['REVIEW_MANIFEST','CONFIRM_MANIFEST','BEGIN_LAUNCH','COMPLETE_LAUNCH'])state=gameReducer(state,{type});state=gameReducer(state,{type:'SELECT_LANDING_SITE',siteId:'landing-safe-zone'});}
+  land();
+  const plan={siteId:'icebound.lumen-shelf',method:'rover-only',activity:'subsurface-drilling',equipmentIds:[],supplies:{power:2}};
+  let html=render(ExpeditionEquipment,{context:selectIceboundContext(state),plan,onChange(){}});
+  assert.match(html,/Standard mission rover/);assert.match(html,/Drilling station/);assert.match(html,/No optional tools were packed/);assert.doesNotMatch(html,/type="checkbox"/);
+  state=gameReducer(createInitialGameState(),{type:'START_GAME'});state=gameReducer(state,{type:'SET_SCIENCE_KIT',packed:true});land();
+  html=render(ExpeditionEquipment,{context:selectIceboundContext(state),plan:{...plan,equipmentIds:['soil-analysis-kit']},onChange(){}});
+  assert.equal((html.match(/type="checkbox"/g)??[]).length,5);assert.match(html,/Soil Analysis Kit/);assert.equal((html.match(/checked=""/g)??[]).length,1);
+  const produced=gameReducer(state,{type:'OPERATE_FACILITY',operationId:'collect-energy',expectedSol:state.sol,expectedResourceRevision:state.resourceRevision});
+  html=render(FacilityProduction,{building:'solar-array',state:produced,dispatch(){}});
+  assert.match(html,/production-succeeded/);assert.match(html,/One big job used/);assert.match(html,/disabled=""/);
 });
 
 test('menu Continue is unavailable without a save and emits only a supplied command', () => {

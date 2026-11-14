@@ -4,6 +4,7 @@ import { selectIceboundContext, selectIceboundView } from '../../../shared/store
 import { capabilitiesFor, fieldIssues } from '../../missions/engine/icebound/readiness.ts'
 import { iceboundEngine } from '../../missions/engine/icebound/iceboundEngine.ts'
 import type { EvidenceClassification } from '../../missions/types/icebound.ts'
+import { currentSamples, currentAnalyses } from '../../missions/engine/icebound/siteProgress.ts'
 import { CHARACTERS } from './characters.ts'
 import { SUPPLY_BALANCE } from '../../missions/data/supplyBalance.ts'
 export { CHARACTERS } from './characters.ts'
@@ -34,7 +35,7 @@ export function adventureDirector(state: GameState): AdventureGuide {
   if (state.outcome || state.completedSol === 10) return guide({ ...base, speakerId: 'kiki', title: 'Our mission story', text: state.outcome === 'failure' ? 'The mission pauses here. Let’s learn and try again.' : 'Ten sols of teamwork! Let’s share what we learned.', actionLabel: 'Mission debrief', endSol: true })
   const inspected = (location: string) => state.guidance.inspections.includes(`${state.sol}:${location}`)
   const lowest = (['oxygen','water','food','power'] as const).find(id => state.resources[id] < (state.preparation.supplies ? SUPPLY_BALANCE.statusBands.needsHelpBelow : 20))
-  if (lowest && !inspected(lowest === 'power' ? 'energy' : 'supplies')) return guide({ ...base, id: `safety.${state.sol}.${lowest}`, speakerId: 'bai', title: `${lowest === 'power' ? 'Energy' : lowest[0].toUpperCase()+lowest.slice(1)} needs attention`, text: 'Our reserve is low. Let’s check before choosing more work.', actionLabel: lowest === 'power' ? 'Check energy' : 'Check crew supplies', panel: lowest === 'power' ? 'energy' : 'supplies', highlight: lowest === 'power' ? 'energy' : 'supplies', recovery: 'Compare mission costs before acting. You can finish the outpost without more science.' })
+  if (lowest && !inspected(lowest === 'power' ? 'energy' : 'supplies')) return guide({ ...base, id: `safety.${state.sol}.${lowest}`, speakerId: 'bai', title: `${lowest === 'power' ? 'Energy' : lowest[0].toUpperCase()+lowest.slice(1)} needs attention`, text: 'Our reserve is low. Let’s check before choosing more work.', actionLabel: lowest === 'power' ? 'Check energy' : 'Check crew supplies', panel: lowest === 'power' ? 'energy' : 'supplies', highlight: lowest === 'power' ? 'energy' : 'supplies', recovery: 'Use the solar array for Energy, habitat for air or water, and greenhouse for Food before ending the sol.' })
   if (state.sol === 1) {
     if (!inspected('habitat')) return guide({ ...base, id: 'outpost.sol1.habitat', speakerId: 'bai', title: 'Welcome to your Mars home', text: 'Welcome to Mars! Let’s check our new home.', actionLabel: 'Explore the habitat', target: 'habitat' })
     if (!inspected('solar-array')) return guide({ ...base, id: 'outpost.sol1.array', speakerId: 'bai', title: 'Our machines need energy', text: 'This home keeps our crew safe. Now tap the solar array!', actionLabel: 'Inspect solar array', target: 'solar-array' })
@@ -54,7 +55,7 @@ export function adventureDirector(state: GameState): AdventureGuide {
     if (state.sol === 10) return guide({ ...base, id: 'sol-10-check', speakerId: 'kiki', title: 'One last outpost check', text: 'Check our supplies. Then finish Sol 10 and share our story.', actionLabel: 'Check supplies', panel: 'supplies', target: 'habitat' })
     return guide({ ...base, id: 'icebound-complete', objectiveId: 'icebound.science-report', speakerId: 'kofi', title: RESULT_LABELS[mission.report.conclusion ?? 'analysis-incomplete'], text: state.sol === 9 ? 'Our findings are ready. Let’s review what we learned.' : 'Our findings are recorded. Explore, then finish our ten sols.', actionLabel: 'Read our findings', panel: 'report' })
   }
-  if (state.actionsRemaining === 0 && !mission.analyses.length) return guide({ ...base, speakerId: 'olef', title: 'Time to rest', text: 'Today’s big jobs are done. Let’s start a fresh sol.', actionLabel: state.sol === 10 ? 'Finish Sol 10' : 'Rest until next sol', endSol: true })
+  if (state.actionsRemaining === 0 && !currentAnalyses(mission).length) return guide({ ...base, speakerId: 'olef', title: 'Time to rest', text: 'Today’s big jobs are done. Let’s start a fresh sol.', actionLabel: state.sol === 10 ? 'Finish Sol 10' : 'Rest until next sol', endSol: true })
   let command: IceboundRuntimeIntent | undefined, title = '', text = '', actionLabel = '', panel: AdventureGuide['panel'], target: AdventureGuide['target'], animationCue: AdventureGuide['animationCue']
   const has = (id: string) => mission.completedObjectives.some(o => o === id)
   let objectiveId = 'icebound.recon'
@@ -62,9 +63,9 @@ export function adventureDirector(state: GameState): AdventureGuide {
   else if (!mission.selectedSiteId) { objectiveId = 'icebound.site-selection'; title = 'Choose a place to explore'; text = 'Compare Scout’s clues. Which place should we investigate?'; actionLabel = 'Compare research sites'; panel = 'sites' }
   else if (!mission.approvedPlan) { objectiveId = 'icebound.expedition-plan'; title = 'Plan our expedition'; text = 'Choose who goes and what tools they take.'; actionLabel = 'Plan the expedition'; panel = 'plan' }
   else if (!mission.expedition) { objectiveId = 'icebound.expedition-plan'; command = { type: 'EXECUTE_EXPEDITION' }; title = 'Our expedition is ready'; text = 'Mission Control checked our plan. Let’s explore!'; actionLabel = 'Start expedition'; animationCue = 'working' }
-  else if (!mission.samples.length) { objectiveId = 'icebound.sample-collection'; command = { type: 'COLLECT_SAMPLE', method: mission.approvedPlan.activity }; title = 'Collect a careful sample'; text = 'We reached the site. Let’s label and seal a sample.'; actionLabel = 'Collect sample'; animationCue = 'sampling' }
-  else if (!mission.analyses.length) { target = 'research-lab'; objectiveId = 'icebound.lab-analysis'; command = { type: 'ANALYZE_SAMPLE', sampleId: mission.samples[0].id }; title = 'Look closer in the lab'; text = 'What does our sample tell us? Let’s test it.'; actionLabel = 'Analyze sample'; animationCue = 'working' }
-  else { target = 'research-lab'; objectiveId = 'icebound.science-report'; command = { type: 'GENERATE_REPORT' }; title = RESULT_LABELS[mission.analyses[0].classification]; text = 'Every honest result helps. Let’s record our findings.'; actionLabel = 'Record science report' }
+  else if (!currentSamples(mission).length) { objectiveId = 'icebound.sample-collection'; command = { type: 'COLLECT_SAMPLE', method: mission.approvedPlan.activity }; title = 'Collect a careful sample'; text = 'We reached the site. Let’s label and seal a sample.'; actionLabel = 'Collect sample'; animationCue = 'sampling' }
+  else if (!currentAnalyses(mission).length) { target = 'research-lab'; objectiveId = 'icebound.lab-analysis'; command = { type: 'ANALYZE_SAMPLE', sampleId: currentSamples(mission)[0].id }; title = 'Look closer in the lab'; text = 'What does our sample tell us? Let’s test it.'; actionLabel = 'Analyze sample'; animationCue = 'working' }
+  else { target = 'research-lab'; objectiveId = 'icebound.science-report'; command = { type: 'GENERATE_REPORT' }; title = RESULT_LABELS[currentAnalyses(mission)[0].classification]; text = 'Every honest result helps. Let’s record our findings.'; actionLabel = 'Record science report' }
   const proposal = command ? iceboundEngine(selectIceboundContext(state), command) : null
   const blockedReason = proposal && !proposal.allowed ? proposal.reason : undefined
   return guide({ id: `${objectiveId}:${mission.revision}`, objectiveId, speakerId: 'kofi', title, text, actionLabel, panel, command, target, animationCue, blockedReason, highlight: objectiveId === 'icebound.recon' ? 'scout' : undefined, recovery: blockedReason ? /action slots/.test(blockedReason) ? 'Start the next sol to get fresh jobs.' : /power|supply|supplies/.test(blockedReason) ? 'Check reserves and compare a lower-cost plan. Science is optional.' : 'Check your packed science tools. Missing cargo needs a new mission.' : undefined })
@@ -76,7 +77,7 @@ export function statusGroups(state: GameState) {
   return [
     { id: 'energy', title: 'Energy', symbol: '☀', status: label(r.power), details: `Power reserve: ${r.power} game units. Mission equipment uses this energy.` },
     { id: 'supplies', title: 'Supplies', symbol: '◈', status: label(Math.min(r.oxygen, r.water, r.food)), details: `Oxygen: ${r.oxygen} · Water: ${r.water} · Food: ${r.food}. Game units, not physical measurements.` },
-    { id: 'safety', title: 'Safety', symbol: '✚', status: safety.allowed ? 'Good' : 'Watch', details: safety.allowed ? 'Crew and airlock ready. EVA oxygen equipment packed. Check the expedition review before field work.' : safety.reason! },
+    { id: 'safety', title: 'Safety', symbol: '✚', status: safety.allowed ? 'Good' : 'Watch', details: safety.allowed ? 'Crew, airlock and standard EVA equipment ready. Check the expedition review before field work.' : safety.reason! },
   ]
 }
 export const missionView = selectIceboundView

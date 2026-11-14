@@ -29,7 +29,7 @@ export function commissionIceboundOutpost(state: GameState): GameState {
   const rover = state.iceboundReadiness.baselineCapabilities.includes('rover') || deployedEquipment.some((item) => item.equipmentId === 'field-rover')
   return refreshIceboundStatus({ ...state,
     sol: 1, completedSol: 0,
-    facilities: { ...state.facilities, habitat: 'operational' },
+    facilities: { ...state.facilities, habitat: 'operational', 'solar-array': 'operational', greenhouse: 'operational' },
     iceboundReadiness: { ...state.iceboundReadiness, deployedEquipment,
       roverOperational: rover, roverEnergyReady: rover, crewAvailable: true, crewSafeForEva: true,
       communicationsReady: true,
@@ -121,7 +121,7 @@ export function applyIceboundResolution(state: GameState, resolution: IceboundRe
     item.status = change.status
   }
   return {
-    ...state, resources: resources.resources, objectives,
+    ...state, resources: resources.resources, objectives, resourceRevision: state.resourceRevision+1,
     icebound: structuredClone(next),
     iceboundReadiness: effects.equipmentStatusChanges.length ? { ...state.iceboundReadiness, deployedEquipment: deployed } : state.iceboundReadiness,
     actionsRemaining: state.actionsRemaining - effects.actionSlotCost,
@@ -144,7 +144,10 @@ export function reduceIceboundAction(state: GameState, action: IceboundStoreActi
     if (action.intent.type === 'EXECUTE_EXPEDITION' && (state.iceboundPlanning.confirmedAtRevision !== state.iceboundPlanning.revision || !state.icebound.approvedPlan)) {
       return reject(state, 'PLAN_CONFIRMATION_REQUIRED', 'Confirm the current expedition plan first.')
     }
-    return applyIceboundResolution(state, iceboundEngine(context, action.intent))
+    const next = applyIceboundResolution(state, iceboundEngine(context, action.intent))
+    return action.intent.type==='SELECT_SITE' && next.icebound.revision!==state.icebound.revision ? {
+      ...next, iceboundPlanning:{...createIceboundPlanningState(),revision:state.iceboundPlanning.revision+1}
+    } : next
   }
 
   if (state.icebound.approvedPlan || state.iceboundPlanning.confirmedAtRevision !== null) {

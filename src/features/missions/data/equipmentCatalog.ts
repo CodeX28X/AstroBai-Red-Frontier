@@ -13,6 +13,7 @@ export const PREDEPLOYED_OUTPOST_BASELINE: OutpostBaselineAssumptions = {
     { id: 'pressurized-habitat', description: 'A sealed habitat with basic crew living space.' },
     { id: 'core-life-support', description: 'Basic oxygen circulation and water recovery are installed.' },
     { id: 'core-power-grid', description: 'A starter power source and electrical distribution are installed.' },
+    { id: 'greenhouse-food-system', description: 'A small commissioned greenhouse supports manual food harvests.' },
     { id: 'communications-link', description: 'A basic Earth communications link is operational.' },
     { id: 'landing-platform', description: 'A prepared arrival and unloading area is available.' },
   ],

@@ -7,6 +7,7 @@ import type { GameInitializationOptions } from '../types/iceboundIntegration.ts'
 import { commissionIceboundOutpost, createIceboundPlanningState, createInitialIceboundReadiness, reduceIceboundAction, refreshIceboundStatus } from './iceboundIntegration.ts'
 import { resolveResourceEffects } from './resourceEffects.ts'
 import { SUPPLY_BALANCE, supplyReserves } from '../../features/missions/data/supplyBalance.ts'
+import { dailyConsumptionDescription, dailyResources, facilityOperationKey, OUTPOST_BALANCE, productionReadiness, productionResources, resourceWarning } from '../../features/simulation/outpostSystems.ts'
 export { MAX_RESOURCE_VALUE } from './resourceEffects.ts'
 
 export const INITIAL_RESOURCES = SUPPLY_BALANCE.baseline
@@ -32,6 +33,8 @@ export function getActionSlotCost(category: ActionCategory): 0 | 1 {
 
 export function createInitialGameState(options: GameInitializationOptions = {}): GameState {
   return {
+    resourceRevision: 0,
+    consumedSols: [],
     guidance: { inspections: [], completedDialogueIds: [] },
     phase: 'menu',
     sol: 0,
@@ -226,17 +229,39 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'ENTER_DEBRIEF':
       return applyMissionTransition(state, action)
 
-    case 'ADVANCE_SOL':
+    case 'ADVANCE_SOL': {
       if (isTerminal(state)) return reject(action, 'game is terminal')
       if (state.phase !== 'outpost') return reject(action, 'sols can only advance during outpost gameplay')
       if (state.completedSol >= state.actionLimits.maxSol) return reject(action, 'maximum sol reached')
+      if (action.expectedSol !== undefined && action.expectedSol !== state.sol) return reject(action, 'this sol has already advanced')
+      if (state.consumedSols.includes(state.sol)) return reject(action, 'this sol has already been consumed')
+      const daily = dailyResources(state.resources)
+      if (!daily.allowed) return { ...state, outcome: 'failure', actionsRemaining:0, feedback: {kind:'success',code:'SUPPLY_FAILURE',message:'Not enough daily supplies. The mission has ended without a daily deduction.',feedbackId:'outpost.supply-failure'} }
+      const failed = Object.values(daily.resources).some(value=>value===0)
       return refreshIceboundStatus({
         ...state,
-        sol: Math.min(state.sol + 1, state.actionLimits.maxSol),
+        resources: daily.resources,
+        resourceRevision: state.resourceRevision + 1,
+        consumedSols: [...state.consumedSols,state.sol],
+        outcome: failed ? 'failure' : state.outcome,
+        sol: failed ? state.sol : Math.min(state.sol + 1, state.actionLimits.maxSol),
         completedSol: state.sol,
-        actionsRemaining: state.sol < state.actionLimits.maxSol ? state.actionLimits.maxActionsPerSol : 0,
-        feedback: null,
+        actionsRemaining: !failed && state.sol < state.actionLimits.maxSol ? state.actionLimits.maxActionsPerSol : 0,
+        feedback: {kind:'success',message:failed?'Daily supplies ran out. The mission has ended.':`Sol ${state.sol} complete. Daily use: ${dailyConsumptionDescription()}. ${resourceWarning(daily.resources)}`.trim(),feedbackId:'outpost.daily-consumption'},
       })
+    }
+
+    case 'OPERATE_FACILITY': {
+      if (action.expectedSol !== state.sol || action.expectedResourceRevision !== state.resourceRevision) return withFeedback(state,'Resources changed. Check the facility again.','error')
+      const readiness = productionReadiness(state, action.operationId)
+      if (!readiness.allowed) return withFeedback(state,readiness.reason!,'error')
+      const result = productionResources(state, action.operationId)
+      if (!result.allowed) return withFeedback(state,result.reason,'error')
+      const operation = OUTPOST_BALANCE.operations[action.operationId]
+      return refreshIceboundStatus({ ...state, resources: result.resources, resourceRevision: state.resourceRevision+1,
+        actionsRemaining: state.actionsRemaining-1, spentActionIds:[...state.spentActionIds,facilityOperationKey(state.sol,action.operationId)],
+        feedback:{kind:'success',code:'FACILITY_PRODUCED',message:`${operation.name}: +${result.resources[operation.resource]-state.resources[operation.resource]} ${operation.resource==='power'?'Energy':operation.resource}. One big job used.`,feedbackId:facilityOperationKey(state.sol,action.operationId)} })
+    }
 
     case 'SPEND_ACTION_SLOT': {
       if (isTerminal(state)) return reject(action, 'game is terminal')

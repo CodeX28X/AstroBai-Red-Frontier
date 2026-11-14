@@ -1,0 +1,19 @@
+/* Compact overlays retain the existing palette, typography and scene geometry. */
+.adventure.adventure-exploring .adventure-hud{inset:8px 10px auto;padding:6px 10px;gap:8px;background:#102b37c9}
+.adventure.adventure-exploring .adventure-objective{top:84px;padding:7px 12px;background:#102b37c9;gap:12px}
+.adventure.adventure-exploring .adventure-objective h1{font-size:23px}
+.adventure.adventure-exploring .adventure-dialogue{min-height:86px;padding:8px 12px;inset:auto 10px 60px;background:#112f3bcc}
+.adventure-exploring .character-dialogue .portrait-frame{width:58px;height:58px}
+.adventure-exploring .spoken-line{font-size:19px}
+.adventure-exploring .character-dialogue{min-height:70px!important}
+.adventure-exploring .hud-toggle{font-size:15px;padding:6px 10px;min-width:108px}
+.adventure-exploring .resource-indicator{min-width:100px;padding:5px 7px;font-size:15px}
+.adventure .standard-tools{padding-left:20px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;font-size:17px}.standard-tools small{color:#b9ebdd}
+.facility-production{display:grid;gap:10px;margin:12px 0}.facility-production>div{display:flex;flex-direction:column;gap:4px}.facility-production button{font-size:17px;text-align:left}.facility-production small{font-size:15px;line-height:1.35}.facility-production p{font-size:17px;margin:0}.production-succeeded{border-left:3px solid #b9ebdd;padding-left:10px;background:#b9ebdd12}
+.adventure.hud-minimized .adventure-hud .wordmark,.adventure.hud-minimized .adventure-hud .help-button,.adventure.hud-minimized .adventure-objective,.adventure.hud-minimized .adventure-dialogue .character-dialogue,.adventure.hud-minimized .skip-chat,.adventure.hud-minimized .nasa-fact-chip{display:none!important}
+.adventure.hud-minimized .adventure-hud{width:max-content;max-width:calc(100% - 20px);right:auto;flex-wrap:wrap}
+.adventure.hud-minimized .adventure-dialogue{left:auto;max-width:350px;min-height:0;background:#112f3bcc}
+.adventure.hud-minimized .adventure-toolbar>button:not(:last-child),.adventure.hud-minimized .save-status{display:none}
+.adventure.hud-minimized .adventure-toolbar{left:auto;width:auto}
+@media(max-width:1100px){.adventure.adventure-exploring .adventure-objective{top:104px}.adventure-exploring .resource-indicator{min-width:0}.adventure-exploring .wordmark{min-width:120px}.adventure-exploring .wordmark>span{font-size:19px}.adventure-exploring .wordmark>small{font-size:11px;letter-spacing:2px}.adventure-exploring .hud-toggle{min-width:96px;font-size:14px}.adventure-exploring .adventure-hud .help-button{font-size:15px;padding:6px}.adventure-exploring .resource-label{flex-wrap:wrap}}
+@media(max-width:700px){.adventure.adventure-exploring .adventure-hud{inset:6px 6px auto;padding:6px;gap:5px}.adventure-exploring .adventure-hud .help-button{display:none}.adventure.adventure-exploring .adventure-objective{top:138px;padding:6px 10px}.adventure.adventure-exploring .adventure-objective h1{font-size:20px}.adventure-exploring .resource-indicator{font-size:14px;padding:4px}.adventure-exploring .resource-label{display:flex;line-height:1.25}.adventure .resource-safety{font-size:14px}.adventure .standard-tools{grid-template-columns:1fr}.adventure.adventure-exploring .adventure-dialogue{inset:auto 6px 60px;padding:8px;max-height:30dvh}.adventure-exploring .character-dialogue .portrait-frame{width:50px;height:50px}.adventure-exploring .spoken-line{font-size:18px}.adventure.hud-minimized .adventure-hud{width:calc(100% - 12px);max-width:none}.adventure.hud-minimized .adventure-hud nav{order:3}.adventure.hud-minimized .hud-toggle{margin-left:auto}.adventure.hud-minimized .adventure-dialogue{left:auto;right:6px;width:min(280px,calc(100% - 12px));display:block}.adventure .adventure-toolbar>button{padding:6px;font-size:14px}.adventure-exploring .world-context{top:225px;max-height:calc(100% - 400px)}}

@@ -1,4 +1,5 @@
 import test from 'node:test'
+import { maintainOutpost } from './gameplayTestSupport.mjs'
 import assert from 'node:assert/strict'
 import { createInitialGameState, gameReducer } from './gameReducer.ts'
 import { CAMPAIGN_OPTIONS } from './campaign.ts'
@@ -12,7 +13,7 @@ import { readFileSync, existsSync } from 'node:fs'
 function prepared(selection=SUPPLY_BALANCE.suggested, kit=true) {
   let state=gameReducer(createInitialGameState(CAMPAIGN_OPTIONS),{type:'START_GAME'})
   const actions=[{type:'START_GAME'}]
-  const send=a=>{state=gameReducer(state,a);assert.notEqual(state.feedback?.kind,'error',state.feedback?.message);actions.push(a);return state}
+  const send=a=>{if(a.type==='ADVANCE_SOL')state=maintainOutpost(state,send);state=gameReducer(state,a);assert.notEqual(state.feedback?.kind,'error',state.feedback?.message);actions.push(a);return state}
   for(const [supplyId,quantity] of Object.entries(selection))send({type:'SET_SUPPLY_QUANTITY',supplyId,quantity})
   if(kit)send({type:'SET_SCIENCE_KIT',packed:true})
   send({type:'REVIEW_MANIFEST'});assert.equal(state.preparation.latestReview.allowed,true)
@@ -51,7 +52,7 @@ test('review highlights missing supplies, confirmation initializes exactly once 
   for(const action of [{type:'SET_SUPPLY_QUANTITY',supplyId:'food',quantity:3},{type:'SET_SCIENCE_KIT',packed:false},{type:'CONFIRM_MANIFEST'}]){const rejected=gameReducer(run.state,action);assert.equal(rejected.feedback.kind,'error');assert.deepEqual(rejected.resources,run.state.resources);assert.deepEqual(rejected.preparation,run.state.preparation)}
   assert.ok(SCIENCE_KIT_IDS.every(id=>run.state.preparation.manifest.optionalCargo.some(e=>e.equipmentId===id)))
 })
-for(const selection of [{power:6,oxygen:1,water:4,food:4},{power:6,oxygen:5,water:5,food:5},{power:7,oxygen:3,water:5,food:5}])test(`real 10-sol investigation balances ${JSON.stringify(selection)}`,()=>{
+for(const selection of [{power:6,oxygen:4,water:4,food:4},{power:6,oxygen:5,water:5,food:5},{power:7,oxygen:3,water:5,food:5}])test(`real 10-sol investigation balances ${JSON.stringify(selection)}`,()=>{
   const run=prepared(selection);land(run)
   while(run.state.sol<3)run.send({type:'ADVANCE_SOL'})
   const cmd=intent=>run.send({type:'ICEBOUND_COMMAND',intent})
@@ -97,6 +98,6 @@ test('portrait slots are labeled local vectors and dialogue debounces repeated c
   assert.equal(mayAdvanceDialogue(100,200),false);assert.equal(mayAdvanceDialogue(100,450),true)
 })
 test('old resource-scale saves fail explicitly; current histories round-trip',()=>{
-  for(const version of [1,2])assert.throws(()=>decodeSave(JSON.stringify({version,actions:[{type:'START_GAME'}]})),/unsupported resource scale/)
+  for(const version of [1,2,3])assert.throws(()=>decodeSave(JSON.stringify({version,actions:[{type:'START_GAME'}]})),/unsupported resource scale/)
   const run=prepared();assert.deepEqual(decodeSave(encodeSave(run.actions)).state,run.state)
 })

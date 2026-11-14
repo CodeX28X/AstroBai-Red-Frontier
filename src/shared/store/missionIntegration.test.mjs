@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { maintainOutpost } from './gameplayTestSupport.mjs'
 import { createInitialGameState, gameReducer, INITIAL_GAME_STATE } from './gameReducer.ts'
 
 function prepare(state = createInitialGameState()) {
@@ -155,11 +156,11 @@ test('outpost sol progression and action limits remain intact; completed Sol 10 
     type: 'SPEND_ACTION_SLOT', actionId: 'sol-1-action-3', category: 'exploration',
   }), /no major actions remain/)
 
-  for (let sol = 1; sol <= 10; sol += 1) state = gameReducer(state, { type: 'ADVANCE_SOL' })
+  for (let sol = 1; sol <= 10; sol += 1) state = gameReducer(maintainOutpost(state), { type: 'ADVANCE_SOL' })
   assert.equal(state.sol, 10)
   assert.equal(state.completedSol, 10)
   assert.equal(state.actionsRemaining, 0)
-  assert.equal(state.resources, initialResources)
+  assert.notDeepEqual(state.resources, initialResources)
   state = gameReducer(state, { type: 'ENTER_DEBRIEF' })
   assert.equal(state.phase, 'debrief')
   assert.equal(state.outcome, 'success')

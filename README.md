@@ -14,7 +14,7 @@ Tap clear ground to walk, or select a building and wait for arrival. Use Tab and
 
 Exploration fills the viewport with an overlay HUD and portrait dialogue. The four resources use a 0–10 scale with visible numbers and bars. Preparation automatically selects 5 each (20/35 cargo); confirmation copies the exact selected amounts, with no extra reserves. Standard outpost equipment supports ICEBOUND without optional cargo. See [the resource-balancing report](docs/resource-balancing-report.md) for costs, save compatibility and validation.
 
-The checkout has no recurring resource simulation, power-allocation rules, repair events or storm-response engine. The UI does not invent those effects. The [integration contract](docs/integration-contract.md) records those limits and remaining owner reviews. The [earlier adventure report](docs/overhaul-report.md) describes the preceding integration pass.
+Each sol now consumes 1 of each resource. Use one-job facility actions to collect 5 Energy or replenish 4 Oxygen, Water or Food (the latter three cost 1 Energy). Operations run once per sol. Record a research site's report to unlock other locations; earlier samples and reports remain saved. The HUD can be minimized and restored. See [the gameplay-fixes report](docs/gameplay-fixes-report.md) for balancing, validation and save compatibility. Power allocation, repairs and storm-response events remain outside this change.
 
 ## Requirements
 
