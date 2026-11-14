@@ -33,7 +33,19 @@ export interface ObjectiveState {
 
 export interface ActionLimits {
   maxSol: number
+  maxActionsPerSol: number
 }
+
+export type MajorActionCategory =
+  | 'operation'
+  | 'repair'
+  | 'event-response'
+  | 'exploration'
+
+export type ActionCategory =
+  | MajorActionCategory
+  | 'facility-inspection'
+  | 'power-allocation'
 
 export interface ProtectionState {
   storm: boolean
@@ -51,6 +63,8 @@ export interface GameFeedback {
 export interface GameState {
   phase: GamePhase
   sol: number
+  actionsRemaining: number
+  spentActionIds: string[]
   resources: Resources
   facilities: Record<BuildingId, BuildingStatus>
   missions: Record<MissionId, MissionStatus>
@@ -75,3 +89,4 @@ export type GameAction =
   | { type: 'SET_PROTECTION'; protection: Partial<ProtectionState> }
   | { type: 'SET_OUTCOME'; outcome: Exclude<GameOutcome, null> }
   | { type: 'CHOOSE_STORY_OPTION'; optionId: string }
+  | { type: 'SPEND_ACTION_SLOT'; actionId: string; category: MajorActionCategory }
