@@ -1,6 +1,7 @@
 import type { PreparationState } from '../../features/missions/types/preparationEngine.ts'
 import type { IceboundAnalysis, IceboundReadiness, IceboundState } from '../../features/missions/types/icebound.ts'
 import type { CommittedIceboundEvent, IceboundPlanningState, IceboundStoreAction } from './iceboundIntegration.ts'
+import type { SurvivalState, OutpostOperationId } from './survival.ts'
 
 export type GamePhase =
   | 'menu'
@@ -66,6 +67,7 @@ export interface GameFeedback {
 }
 
 export interface GameState {
+  survival?: SurvivalState
   phase: GamePhase
   sol: number
   completedSol: number
@@ -91,8 +93,9 @@ export interface GameState {
 
 export type GameAction =
   | IceboundStoreAction
+  | { type: 'OUTPOST_OPERATION'; operation: OutpostOperationId; expectedSol: number }
   | { type: 'START_GAME' }
-  | { type: 'ADVANCE_SOL' }
+  | { type: 'ADVANCE_SOL'; expectedSol?: number }
   | { type: 'RESET_GAME' }
   | { type: 'SET_EQUIPMENT_QUANTITY'; equipmentId: string; quantity: number }
   | { type: 'REVIEW_MANIFEST' }

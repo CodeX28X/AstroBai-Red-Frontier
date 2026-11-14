@@ -9,7 +9,7 @@ import { AmbientActors } from './AmbientActors';
 import { useAmbientMotion } from '../../hooks/useAmbientMotion';
 import { MarsEffects, MarsEnvironmentNotice } from './MarsEffects';
 
-export function MarsMap({ selectedFacilityId, onSelectFacility, facilityStatuses, animationsEnabled = true, sites = [], selectedSiteId, onSelectSite, environment = {}, completionNotice, isActive = true }: MarsMapProps) {
+export function MarsMap({ selectedFacilityId, onSelectFacility, facilityStatuses, animationsEnabled = true, sites = [], selectedSiteId, onSelectSite, environment = {}, completionNotice, isActive = true, showFacilities = true }: MarsMapProps) {
   const instructionsId = useId();
   const motionActive = useAmbientMotion(animationsEnabled && isActive);
   return <section className={`map-section${motionActive ? '' : ' motion-paused'}`} aria-label="Mars outpost" aria-describedby={instructionsId}>
@@ -19,7 +19,7 @@ export function MarsMap({ selectedFacilityId, onSelectFacility, facilityStatuses
       <span className="map-north" aria-hidden="true">N<br/>↑</span>
       <AmbientActors crewSheltering={environment.crewSheltering} selectedFacilityId={selectedFacilityId} motionActive={motionActive} mapActive={isActive}/>
       <MarsEffects {...environment}/>
-      {marsLocations.map(location => <Facility key={location.id} location={location} status={facilityStatuses[location.id]} sheltering={location.id === 'habitat' && environment.crewSheltering} selected={selectedFacilityId === location.id} onSelect={() => onSelectFacility(location.id)} />)}
+      {showFacilities && marsLocations.map(location => <Facility key={location.id} location={location} status={facilityStatuses[location.id]} sheltering={location.id === 'habitat' && environment.crewSheltering} selected={selectedFacilityId === location.id} onSelect={() => onSelectFacility(location.id)} />)}
       {sites.map(site => <ExplorationSite key={site.id} site={site} selected={selectedSiteId === site.id} onSelect={() => onSelectSite?.(site.id)}/>)}
       {completionNotice && <div key={completionNotice.id} className="completion-notice" role="status"><span aria-hidden="true">✓</span> {completionNotice.message}</div>}
       <span className="terrain-caption" aria-hidden="true">A SMALL HOME. A BIG ADVENTURE.</span>

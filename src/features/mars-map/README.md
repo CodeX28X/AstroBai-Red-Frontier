@@ -1,6 +1,51 @@
 # Developer B — Mars map
 
-This feature ports the existing Developer B visual prototype into the team's owning `src/features/mars-map` area. The team app entry point, shared types/store, missions, package versions/scripts and Vite configuration are unchanged. The optional narrative gallery and its incomplete backgrounds are not included.
+The root player application now uses this map, its ICEBOUND adapter and working room job panels.
+FacilityInterior accepts optional activityPanel content; decorative hotspots still inspect for free. Unbuilt status is
+an explicit display value, and the lab marker derives from installed lab readiness. See
+[the current integration guide](../../../docs/MVP_GAMEPLAY_INTEGRATION.md). Earlier preview
+notes below describe their original transfer scope.
+
+Developer B's visual components live in the owning Mars map feature. The research-site
+preview is connected to the existing centralized ICEBOUND state; integration details follow.
+
+PR #8's existing map, site graphics, interiors, animations and preview layout are retained.
+The full preview now uses the existing GameProvider. Its research-site data comes from
+selectIceboundView and validateObjective; names and observations come from D's engine.
+The standalone props.html fixture remains an isolated visual contract test.
+
+Open the full preview with ?debug=1 and use Settings → Load confirmed Sol 3 preview to
+exercise the connection. This opt-in setup dispatches supported preparation, launch,
+landing and sol actions; it does not grant resources or an installed lab/drill. Then
+choose Recon (Record reconnaissance), inspect a site, and select it with Select research site.
+The ordinary preview starts with the real initial state and explains its locked status.
+
+Inspection only opens the existing card. The selected marker and mobile aria-pressed state
+always reflect GameState. Selected sites use B's active style; only an executed expedition
+adds an assignment sprite, and a recorded report adds the completed style/notice. Negative
+and inconclusive results remain valid. Details expose recorded recon, terrain, accessible
+methods, operational hazards, fictional labeling, and the existing source registry links.
+No scenario ground truth is revealed before analysis. Blockers come from the engine.
+
+For A's future host integration, import useIceboundExploration and IceboundSiteDetails
+from this feature index inside the existing GameProvider. Pass sites, selectedSiteId and
+completionNotice from the hook to MarsMap; onSelectSite may open local inspection, and
+IceboundSiteDetails onSelect uses the hook's selectSite. reconnoitre dispatches RECON.
+No hook stores mission state. No provider is mounted inside the map or hook.
+
+Remaining limits: facility statuses/interiors and environment controls in this preview are
+labeled visual fixtures. The research-lab versus water-extractor and unbuilt status contract
+still needs owner agreement. Those controls never change ICEBOUND readiness. The old team
+request preview is removed from this connected view: planning review/confirmation, execution,
+sampling and analysis still need compatible UI. A's root app and storyline are unchanged;
+this preview entry is not included in the root production bundle.
+
+npm test now includes the B component, route and ICEBOUND UI tests. Tests use the established
+Vite bundle + React server-rendering approach and real callback/reducer transactions; no
+DOM test dependency was added. Run node src/features/mars-map/tests/buildPreview.mjs to
+check both HTML preview bundles. Browser layout and device checks remain separate.
+
+## Original visual transfer notes (historical)
 
 ## Preview
 

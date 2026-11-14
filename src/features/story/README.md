@@ -1,5 +1,9 @@
 # Developer A story and dashboard UI
 
+The player application now reuses these visual primitives at the root URL. See
+[the current integration guide](../../../docs/MVP_GAMEPLAY_INTEGRATION.md). The following
+sections describe the original visual handoff; its preview/story fixtures remain isolated.
+
 Draft UI handoff based on the supplied GDD v2.0 Child-Centered. The live team app entry point, shared state/reducer, mission implementation, package files and Vite configuration are unchanged. Game rules and actual state integration remain C/D-owned.
 
 ## Preview from the team repository root

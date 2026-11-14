@@ -1,6 +1,6 @@
 // Presentation-only identifiers. These are not Developer C's shared state contract.
 export type FacilityId = 'habitat' | 'solar-array' | 'greenhouse' | 'research-lab';
-export type FacilityStatus = 'operational' | 'offline' | 'damaged';
+export type FacilityStatus = 'operational' | 'offline' | 'damaged' | 'unbuilt';
 export type FacilityStatuses = Readonly<Record<FacilityId, FacilityStatus>>;
 export type ExpeditionKind = 'rover' | 'astronaut' | 'combined';
 // Visual inputs only. Independent flags; no hazard or crew-safety calculations.
@@ -10,6 +10,7 @@ export interface MarsEnvironment {
   readonly crewSheltering?: boolean;
 }
 export interface ScienceSite {
+  readonly statusLabel?: string;
   readonly id: string;
   readonly label: string;
   readonly status: 'available' | 'locked' | 'active' | 'completed';
@@ -28,6 +29,7 @@ export interface FacilityLocation {
 }
 
 export interface MarsMapProps {
+  readonly showFacilities?: boolean;
   // Presentation visibility only: a retained map pauses while an interior is open.
   readonly isActive?: boolean;
   // Supplied only after the shared mission system reports an outcome.

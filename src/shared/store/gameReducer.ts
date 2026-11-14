@@ -6,6 +6,7 @@ import { createIceboundState } from '../../features/missions/engine/icebound/ice
 import type { GameInitializationOptions } from '../types/iceboundIntegration.ts'
 import { commissionIceboundOutpost, createIceboundPlanningState, createInitialIceboundReadiness, reduceIceboundAction, refreshIceboundStatus } from './iceboundIntegration.ts'
 import { resolveResourceEffects } from './resourceEffects.ts'
+import { OUTPOST_OPERATIONS, reviewOutpostOperation, proposeDailyUpkeep } from '../../features/simulation/outpostSimulation.ts'
 export { MAX_RESOURCE_VALUE } from './resourceEffects.ts'
 
 export const INITIAL_RESOURCES = {
@@ -37,6 +38,7 @@ export function getActionSlotCost(category: ActionCategory): 0 | 1 {
 
 export function createInitialGameState(options: GameInitializationOptions = {}): GameState {
   return {
+    ...(options.survivalEnabled ? { survival: { rules: 'gentle-survival-v1' as const, lastUpkeepSol: 0, care: [], endedBecause: [] } } : {}),
     phase: 'menu',
     sol: 0,
     completedSol: 0,
@@ -193,7 +195,20 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'RESET_GAME':
       return createInitialGameState({ runId: state.icebound.runId, scenarioId: state.icebound.scenarioId,
-        installedCapabilities: state.iceboundReadiness.baselineCapabilities })
+        installedCapabilities: state.iceboundReadiness.baselineCapabilities, survivalEnabled: !!state.survival })
+
+    case 'OUTPOST_OPERATION': {
+      if (!Number.isInteger(action.expectedSol)) return withFeedback(state, 'Choose the job again from its room.', 'error')
+      const review = reviewOutpostOperation(state, action.operation, action.expectedSol)
+      if (!review.allowed) return withFeedback(state, review.reason, 'error', 'outpost.operation.blocked')
+      const result = resolveResourceEffects(state.resources, [review.resourceDeltas])
+      if (!result.allowed) return withFeedback(state, result.reason, 'error')
+      return refreshIceboundStatus({ ...state, resources: result.resources, actionsRemaining: state.actionsRemaining - 1,
+        spentActionIds: [...state.spentActionIds, review.id], appliedResolutionIds: [...state.appliedResolutionIds, review.id],
+        survival: { ...state.survival!, care: [...state.survival!.care, { id: review.id, sol: state.sol, operation: action.operation, resourceDeltas: review.resourceDeltas }] },
+        feedback: { kind: 'success', message: OUTPOST_OPERATIONS[action.operation].title + ' — done! One big job used.', feedbackId: 'outpost.operation.' + action.operation },
+      })
+    }
 
     case 'ICEBOUND_COMMAND':
     case 'SET_ICEBOUND_EXPEDITION_PLAN':
@@ -218,12 +233,27 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'ADVANCE_SOL':
       if (isTerminal(state)) return reject(action, 'game is terminal')
       if (state.phase !== 'outpost') return reject(action, 'sols can only advance during outpost gameplay')
+      if (action.expectedSol !== undefined && action.expectedSol !== state.sol) return withFeedback(state, 'The day has already changed. Check your supplies before ending another day.', 'error')
       if (state.sol >= state.actionLimits.maxSol) return reject(action, 'maximum sol reached')
+      if (state.survival) {
+        const proposal = proposeDailyUpkeep(state)
+        if (!proposal.allowed) return withFeedback(state, proposal.reason, 'error')
+        const failed = proposal.endedBecause.length > 0
+        return refreshIceboundStatus({ ...state, resources: proposal.resources, sol: state.sol + 1, completedSol: state.sol + 1,
+          actionsRemaining: state.actionLimits.maxActionsPerSol,
+          survival: { ...state.survival, lastUpkeepSol: state.sol + 1, endedBecause: proposal.endedBecause },
+          outcome: failed ? 'failure' : null,
+          iceboundReadiness: failed ? { ...state.iceboundReadiness, crewAvailable: false, crewSafeForEva: false,
+            roverEnergyReady: false, laboratoryOperational: false } : state.iceboundReadiness,
+          feedback: { kind: failed ? 'error' : 'success', message: failed ? 'Supplies ran out. The crew is in shelter and this mission has ended.' : 'A new day! The crew used supplies, and you have two big jobs again.', feedbackId: failed ? 'outpost.supplies.empty' : 'outpost.day.ready' },
+        })
+      }
       return refreshIceboundStatus({
         ...state,
         sol: state.sol + 1,
         completedSol: state.sol + 1,
         actionsRemaining: state.actionLimits.maxActionsPerSol,
+        feedback: { kind: 'success', message: 'A new sol is ready. You have two major actions.', feedbackId: null },
       })
 
     case 'SPEND_ACTION_SLOT': {
@@ -238,6 +268,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         ...state,
         actionsRemaining: state.actionsRemaining - cost,
         spentActionIds: [...state.spentActionIds, actionId],
+        feedback: null,
       })
     }
 

@@ -42,10 +42,10 @@ const render = (component, props) => renderToStaticMarkup(React.createElement(co
 
 test('all four facilities expose native inspection buttons in every status and selection state', () => {
   assert.equal(marsLocations.length, 4);
-  for (const location of marsLocations) for (const status of ['operational', 'offline', 'damaged']) for (const selected of [false, true]) {
+  for (const location of marsLocations) for (const status of ['operational', 'offline', 'damaged', 'unbuilt']) for (const selected of [false, true]) {
     const html = render(Facility, { location, status, selected, onSelect: () => assert.fail('render dispatched') });
     assert.match(html, /<button type="button"/);
-    assert.ok(html.includes(`Inspect ${location.label}, ${status}`));
+    assert.ok(html.includes(`Inspect ${location.label}, ${{ operational: 'Ready', offline: 'Not ready', damaged: 'Needs repair', unbuilt: 'Not built' }[status]}`));
     assert.ok(html.includes(`aria-pressed="${selected}"`));
     assert.ok(html.includes(`status-${status}`));
     assert.equal(html.includes('malfunction-plume'), status === 'damaged');

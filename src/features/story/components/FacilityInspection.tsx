@@ -3,13 +3,14 @@ import type { FacilityId, ScienceSite } from '../../mars-map'
 import { facilityLabels, facilityPurpose } from '../data/facilityCopy'
 
 /** Free inspection/navigation. This component never dispatches a gameplay action. */
-export function FacilityInspection({ facilityId, statusLine, site, onClose, onEnter, enterButtonRef }: {
+export function FacilityInspection({ facilityId, statusLine, site, onClose, onEnter, enterButtonRef, entryBlockedReason }: {
   readonly facilityId: FacilityId | null
   readonly statusLine?: string
   readonly site?: ScienceSite
   readonly onClose: () => void
   readonly onEnter: (id: FacilityId) => void
   readonly enterButtonRef?: Ref<HTMLButtonElement>
+  readonly entryBlockedReason?: string
 }) {
   if (!facilityId && !site) return null
   const label=facilityId ? facilityLabels[facilityId] : site!.label
@@ -19,6 +20,7 @@ export function FacilityInspection({ facilityId, statusLine, site, onClose, onEn
     <p>{facilityId ? facilityPurpose[facilityId] : `${site!.status} · Looking is free.`}</p>
     <p>{facilityId ? statusLine : site?.assignment}</p>
     <small>Looking is always free.</small>
-    {facilityId && <button ref={enterButtonRef} type="button" className="a-primary a-enter-facility" onClick={() => onEnter(facilityId)}>Enter {label} →</button>}
+    {entryBlockedReason && <p>{entryBlockedReason}</p>}
+    {facilityId && <button ref={enterButtonRef} type="button" disabled={!!entryBlockedReason} className="a-primary a-enter-facility" onClick={() => onEnter(facilityId)}>Enter {label} →</button>}
   </aside>
 }

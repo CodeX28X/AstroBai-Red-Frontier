@@ -27,7 +27,9 @@ export function commissionIceboundOutpost(state: GameState): GameState {
   const deployedEquipment = state.preparation.manifest.optionalCargo.map((entry) => ({ equipmentId: entry.equipmentId, status: 'operational' as const }))
   const rover = deployedEquipment.some((item) => item.equipmentId === 'field-rover')
   return refreshIceboundStatus({ ...state,
-    facilities: { ...state.facilities, habitat: 'operational' },
+    facilities: { ...state.facilities, habitat: 'operational', ...(state.survival ? {
+      'solar-array': 'operational' as const, greenhouse: 'operational' as const, 'water-extractor': 'operational' as const,
+    } : {}) },
     iceboundReadiness: { ...state.iceboundReadiness, deployedEquipment,
       roverOperational: rover, roverEnergyReady: rover, crewAvailable: true, crewSafeForEva: true,
       communicationsReady: true,
