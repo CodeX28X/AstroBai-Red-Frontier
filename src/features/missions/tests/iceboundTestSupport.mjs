@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { gameReducer, createInitialGameState } from '../../../shared/store/gameReducer.ts'
 import { createIceboundState, iceboundEngine } from '../engine/icebound/index.ts'
 
+
 export const equipmentIds = ['field-rover', 'repair-toolkit', 'soil-analysis-kit', 'sample-container-set', 'portable-oxygen-kit']
 
 export function fixture(scenarioId = 'icebound.training-v1') {

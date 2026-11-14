@@ -7,14 +7,16 @@ BuildingStatus, MissionStatus, confirmed PreparationState, and equipment catalog
 not contain React, another provider/store, resource simulation, network requests, dialogue, or a
 new phase. It runs during outpost sols 3–10 and stops when GameOutcome becomes terminal.
 
-This delivers the mission engine and proposed integration contracts, not a registered shared action
-or live frontend. Developer C must review and implement the shared adapter and atomic commit below.
-Developer A can then render the exported data and dispatch commands. Member E should review the
-educational explanations and game abstractions before release.
+The mission engine is integrated with C's shared reducer and centralized game state. The reducer
+owns preparation, deployed-equipment readiness, resource deductions, action slots, objective
+projections, and exactly-once mission commits. Frontend presentation remains outside this feature;
+Member E should review the educational explanations and game abstractions before release.
 
-The current shared store has resources, action slots, facilities, preparation, outcome and sol state.
-It does **not** yet define crew health, a rover battery, deployed equipment, laboratory state,
-weather advisories, or power allocation. Do not silently assume these are ready.
+The current shared store has resources, action slots, facilities, the authoritative confirmed
+preparation state, outcome and sol state. `IceboundContext` reads preparation from
+`GameState.preparation`; it does not duplicate that state. The store does not yet define crew health,
+a rover battery, deployed equipment, laboratory state, weather advisories, or power allocation. Do not
+silently assume these are ready.
 
 ## Data and objective progression
 
@@ -71,17 +73,18 @@ Main public types: `IceboundState`, `IceboundContext`, `IceboundReadiness`, `Ice
 `ExpeditionPlan`, `IceboundSample`, `IceboundAnalysis`, `IceboundScienceReport`, `IceboundEvent`.
 The source registry, mission definition, objectives, sites, scenarios and balance config are exported.
 
-## Proposed C-owned state and action additions
+## C-owned state and action integration
 
-The following are proposals; shared files have not been changed:
+These contracts are implemented in `src/shared/types/game.ts`,
+`src/shared/types/iceboundIntegration.ts`, and `src/shared/store/iceboundIntegration.ts`:
 
 ```ts
-// src/shared/types/game.ts — C to approve
+// src/shared/types/game.ts
 icebound: IceboundState
 // Optional general mission infrastructure already proposed in docs/integration-contract.md:
 appliedResolutionIds: string[]
 
-// Add IceboundActionProposal to GameAction:
+// C-owned GameAction variant:
 { type: 'ICEBOUND_COMMAND'; intent: IceboundIntent }
 ```
 
@@ -94,8 +97,8 @@ Initialize with a stable per-game run ID (C chooses it once); do not generate ti
 the engine. All sample/proposal IDs are deterministic and namespaced by that run. Reset the slice
 and all applied-ID records together on a new game. Never change the scenario after starting a run.
 
-Build `IceboundContext` inside C's reducer using the current GameState, current slice and explicit
-`IceboundReadiness` facts:
+The shared selector builds `IceboundContext` from the current `GameState` (including
+`state.preparation`), current mission slice and explicit `IceboundReadiness` facts:
 
 - `deployedEquipment`: existing confirmed cargo IDs plus operational/damaged/offline status.
 - `baselineCapabilities`: approved installed capabilities, not arbitrary player claims.
@@ -149,10 +152,11 @@ Site comparison/selection, planning/review and report recording cost zero slots.
 dispatch SPEND_ACTION_SLOT: that would split a transaction and may double-charge it. C must commit
 the slot cost with resource/progress effects. No resources or slots change on rejection.
 
-The end-to-end test uses a real confirmed cargo manifest (14 of 30 abstract cargo units), the real
-revised opening flow and C's actual ADVANCE_SOL action to reset slots. Four major actions fit in Sols
-3 and 4 under the current illustrative one-off budgets. This verifies compatibility with current
-code, not with future recurring resource rates that C/E have not agreed yet.
+The end-to-end test uses a real confirmed cargo manifest (14 of 30 abstract cargo units), C's shared
+preparation and opening flows, and the actual ADVANCE_SOL action to reset slots. Four major actions
+fit in Sols 3 and 4 under the current illustrative one-off budgets, without resource top-ups or a
+fabricated terminal outcome. Current ADVANCE_SOL has no recurring resource consumption; the test does
+not change the ten-sol cap. C/E have not agreed future recurring resource rates.
 
 ## Atomic application and replay protection
 
@@ -169,8 +173,8 @@ code, not with future recurring resource rates that C/E have not agreed yet.
 
 Both the mission slice's resolved operations and global objective markers guard repeats. A second
 call on an unchanged snapshot intentionally returns the same proposal: **purity does not commit it**.
-The central reducer owns exactly-once application. The only commit helper in this change is a test
-harness, not a production store/reducer. Existing shared code has not been extended to apply ICEBOUND.
+The central reducer owns exactly-once application; the test harness exercises the same atomicity
+invariants for pure-engine unit tests.
 
 ## Sampling, interpretation and report semantics
 
@@ -245,5 +249,12 @@ tests. It now discovers the existing mission/shared-store test patterns, includi
 definitions still used it, breaking TypeScript compilation. This change isolates that compatibility
 phase in mission-owned legacy types only; no story content or current shared phase was changed.
 
-No edits to shared GameState, GameAction, reducer, provider, React screens or the equipment catalog
-are part of this feature. A pre-existing untracked root file was left untouched.
+The shared GameState, GameAction, reducer and selector own the integration. This feature adds no
+React screens or equipment-catalog entries.
+### Preparation adapter and fixture regression fix
+
+The ICEBOUND adapter reads the authoritative `game.preparation` field integrated by C. Confirmed
+revision, review, manifest validity and deployed-inventory checks remain enforced. The fixture uses
+the shared reducer's supported preparation and opening actions, then advances sols through
+`ADVANCE_SOL`. Regression tests cover manifest confirmation, actual landing costs, the terminal
+guard and ten-sol boundary. No unapproved shared actions or storyline behavior are added.

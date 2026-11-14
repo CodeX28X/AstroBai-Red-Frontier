@@ -5,6 +5,29 @@ import { iceboundEngine, getMissionStatus, createIceboundState, ICEBOUND_OBJECTI
 import { EQUIPMENT_CATALOG } from '../data/equipmentCatalog.ts'
 import { fixture, act, commit, plan, nextSol, deepFreeze } from './iceboundTestSupport.mjs'
 
+test('fixture uses the shared confirmed preparation contract and remains within the ten-sol mission', () => {
+  const context = fixture()
+  assert.equal(context.game.preparation.status, 'confirmed')
+  assert.equal(context.game.preparation.confirmedAtRevision, context.game.preparation.revision)
+  assert.equal(context.game.preparation.latestReview.allowed, true)
+  assert.equal(context.game.phase, 'outpost')
+  assert.equal(context.game.sol, 3)
+  assert.equal(context.game.outcome, null)
+  assert.equal(context.game.actionsRemaining, 2)
+  assert.equal(context.game.actionLimits.maxSol, 10)
+})
+
+test('fixture retains the central reducer terminal guard and ten-sol boundary', () => {
+  const context = fixture()
+  const terminal = { ...context, game: { ...context.game, outcome: 'failure' } }
+  const before = structuredClone(terminal)
+  assert.throws(() => nextSol(terminal), /game is terminal/)
+  assert.deepEqual(terminal, before)
+  const atLimit = { ...context, game: { ...context.game, sol: 10 } }
+  assert.throws(() => nextSol(atLimit), /maximum sol reached/)
+})
+
+
 test('a complete ICEBOUND investigation fits the real two-slot sol loop and 10-sol mission', () => {
   let context = fixture()
   const initialResources = { ...context.game.resources }
@@ -21,6 +44,7 @@ test('a complete ICEBOUND investigation fits the real two-slot sol loop and 10-s
   context = act(context, { type: 'ANALYZE_SAMPLE', sampleId: context.mission.samples[0].id })
   context = act(context, { type: 'GENERATE_REPORT' })
   assert.equal(context.game.sol, 4)
+  assert.equal(context.game.outcome, null)
   assert.equal(context.game.missions.icebound, 'completed')
   assert.equal(getMissionStatus(context).completedCount, 6)
   assert.equal(context.mission.report.conclusion, 'supports-accessible-ice')

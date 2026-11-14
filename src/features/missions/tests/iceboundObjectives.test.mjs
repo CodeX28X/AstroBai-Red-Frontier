@@ -72,6 +72,24 @@ test('an approved baseline survey capability is a valid rover-equivalent for rec
   context.readiness.roverOperational = false
   assert.equal(resolveReconnaissance(context).allowed, true)
 })
+
+test('shared preparation state requires current confirmation, review, and valid manifest', () => {
+  for (const change of [
+    (c) => { c.game.preparation.confirmedAtRevision = null },
+    (c) => { c.game.preparation.reviewedRevision = -1 },
+    (c) => { c.game.preparation.latestReview = null },
+    (c) => { c.game.preparation.manifest.optionalCargo[0].quantity = 0 },
+  ]) {
+    const context = fixture(); change(context)
+    assert.equal(resolveReconnaissance(context).code, 'CONFIRMED_MANIFEST_REQUIRED')
+  }
+})
+
+test('deployment alone never supplies equipment omitted from the confirmed manifest', () => {
+  const context = fixture()
+  context.game.preparation.manifest.optionalCargo = context.game.preparation.manifest.optionalCargo.filter((item) => item.equipmentId !== 'field-rover')
+  assert.equal(resolveReconnaissance(context).allowed, false)
+})
 test('site selection requires reconnaissance, a known site and actual method access', () => {
   assert.equal(selectResearchSite(fixture(), 'icebound.lumen-shelf').allowed, false)
   const context = act(fixture(), { type: 'RECON' })
