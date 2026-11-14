@@ -1,0 +1,72 @@
+﻿#root {
+  min-height: 100vh;
+}
+
+.setup-screen {
+  width: min(100% - 2rem, 46rem);
+  margin: 0 auto;
+  padding: clamp(3rem, 10vh, 7rem) 0;
+}
+
+.eyebrow,
+.status {
+  color: #e26b4b;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+h1 {
+  max-width: 12ch;
+  margin: 1rem 0;
+  font-size: clamp(2.6rem, 8vw, 4.5rem);
+  line-height: 1.02;
+}
+
+.intro {
+  max-width: 39rem;
+  color: #b7c1ca;
+  font-size: 1.1rem;
+  line-height: 1.65;
+}
+
+.team-card {
+  margin-top: 3rem;
+  padding: clamp(1.25rem, 4vw, 2rem);
+  border: 1px solid #34424e;
+  border-radius: 1rem;
+  background: #151e27;
+}
+
+.team-card h2 {
+  margin-top: 0;
+  font-size: 1.15rem;
+}
+
+.team-card ul {
+  display: grid;
+  gap: 0.9rem;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.team-card li {
+  display: grid;
+  grid-template-columns: 2rem 1fr;
+  gap: 0.75rem;
+  align-items: start;
+  color: #c5cdd4;
+  line-height: 1.5;
+}
+
+.team-label {
+  color: #f3a287;
+  font-weight: 700;
+}
+
+.status {
+  margin-top: 2rem;
+  font-size: 0.7rem;
+}
