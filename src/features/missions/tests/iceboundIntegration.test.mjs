@@ -23,7 +23,7 @@ test('fixture retains the central reducer terminal guard and ten-sol boundary', 
   const before = structuredClone(terminal)
   assert.throws(() => nextSol(terminal), /game is terminal/)
   assert.deepEqual(terminal, before)
-  const atLimit = { ...context, game: { ...context.game, sol: 10 } }
+  const atLimit = { ...context, game: { ...context.game, sol: 10, completedSol: 10 } }
   assert.throws(() => nextSol(atLimit), /maximum sol reached/)
 })
 
@@ -48,7 +48,7 @@ test('a complete ICEBOUND investigation fits the real two-slot sol loop and 10-s
   assert.equal(context.game.missions.icebound, 'completed')
   assert.equal(getMissionStatus(context).completedCount, 6)
   assert.equal(context.mission.report.conclusion, 'supports-accessible-ice')
-  assert.equal(context.game.resources.power, initialResources.power - 14)
+  assert.equal(context.game.resources.power, initialResources.power - 4)
   assert.equal(context.mission.costs.reduce((sum, cost) => sum + cost.actionSlots, 0), 4)
   assert.ok(Object.values(context.game.resources).every((value) => value >= 0))
   assert.ok(context.mission.report.reconnaissance.length === 3)

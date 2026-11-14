@@ -6,17 +6,12 @@ import { createIceboundState } from '../../features/missions/engine/icebound/ice
 import type { GameInitializationOptions } from '../types/iceboundIntegration.ts'
 import { commissionIceboundOutpost, createIceboundPlanningState, createInitialIceboundReadiness, reduceIceboundAction, refreshIceboundStatus } from './iceboundIntegration.ts'
 import { resolveResourceEffects } from './resourceEffects.ts'
+import { SUPPLY_BALANCE, supplyReserves } from '../../features/missions/data/supplyBalance.ts'
 export { MAX_RESOURCE_VALUE } from './resourceEffects.ts'
 
-export const INITIAL_RESOURCES = {
-  power: 100,
-  oxygen: 100,
-  water: 100,
-  food: 100,
-} as const
+export const INITIAL_RESOURCES = SUPPLY_BALANCE.baseline
 
 export const MAX_ACTIONS_PER_SOL = 2
-const DEFAULT_CARGO_CAPACITY_UNITS = 30
 
 export function getActionSlotCost(category: ActionCategory): 0 | 1 {
   switch (category) {
@@ -37,6 +32,7 @@ export function getActionSlotCost(category: ActionCategory): 0 | 1 {
 
 export function createInitialGameState(options: GameInitializationOptions = {}): GameState {
   return {
+    guidance: { inspections: [], completedDialogueIds: [] },
     phase: 'menu',
     sol: 0,
     completedSol: 0,
@@ -47,7 +43,7 @@ export function createInitialGameState(options: GameInitializationOptions = {}):
       missionId: 'icebound',
       baselineId: PREDEPLOYED_OUTPOST_BASELINE.id,
       optionalCargo: [],
-    }, DEFAULT_CARGO_CAPACITY_UNITS),
+    }, SUPPLY_BALANCE.cargoCapacity, true),
     selectedLandingSite: null,
     facilities: {
       habitat: 'unbuilt',
@@ -116,7 +112,7 @@ function reviewFeedbackMessage(state: GameState): string {
 
 function applyPreparationIntent(
   state: GameState,
-  intent: Extract<GameAction, { type: 'SET_EQUIPMENT_QUANTITY' | 'REVIEW_MANIFEST' | 'CONFIRM_MANIFEST' }>,
+  intent: Extract<GameAction, { type: 'SET_EQUIPMENT_QUANTITY' | 'SET_SUPPLY_QUANTITY' | 'SET_SCIENCE_KIT' | 'REVIEW_MANIFEST' | 'CONFIRM_MANIFEST' }>,
 ): GameState {
   if (state.phase !== 'preparation') {
     return withFeedback(state, 'Preparation can only be changed before launch.', 'error')
@@ -130,7 +126,7 @@ function applyPreparationIntent(
     return withFeedback(nextState, reviewFeedbackMessage(nextState), 'success', 'mission-control-review')
   }
   if (intent.type === 'CONFIRM_MANIFEST') {
-    return withFeedback(nextState, 'Mission preparation confirmed. The manifest is locked.', 'success', 'manifest-confirmed')
+    return withFeedback(resolution.state.supplies ? { ...nextState, resources: supplyReserves(resolution.state.supplies) } : nextState, 'Mission preparation confirmed. The manifest is locked.', 'success', 'manifest-confirmed')
   }
   return { ...nextState, feedback: null }
 }
@@ -176,6 +172,7 @@ function applyMissionTransition(state: GameState, intent: MissionProgressionInte
   const nextState: GameState = {
     ...state,
     phase: resolution.nextPhase,
+    preparation: intent.type === 'START_GAME' ? { ...state.preparation, supplies: { ...SUPPLY_BALANCE.suggested } } : state.preparation,
     resources: resourceResult.resources,
     objectives,
     selectedLandingSite: intent.type === 'SELECT_LANDING_SITE' ? intent.siteId : state.selectedLandingSite,
@@ -193,6 +190,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'RESET_GAME':
       return createInitialGameState({ runId: state.icebound.runId, scenarioId: state.icebound.scenarioId,
+        preparationMode: state.preparation.supplies ? 'supplies' : undefined,
         installedCapabilities: state.iceboundReadiness.baselineCapabilities })
 
     case 'ICEBOUND_COMMAND':
@@ -205,9 +203,22 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return applyMissionTransition(state, action)
 
     case 'SET_EQUIPMENT_QUANTITY':
+    case 'SET_SUPPLY_QUANTITY':
+    case 'SET_SCIENCE_KIT':
     case 'REVIEW_MANIFEST':
     case 'CONFIRM_MANIFEST':
       return applyPreparationIntent(state, action)
+    case 'INSPECT_LOCATION': {
+      if (state.phase !== 'outpost' || !['habitat', 'solar-array', 'greenhouse', 'research-lab', 'energy', 'supplies', 'safety'].includes(action.locationId)) return withFeedback(state, 'That inspection is not available here.', 'error')
+      const id = `${state.sol}:${action.locationId}`
+      if (state.guidance.inspections.includes(id)) return state
+      return { ...state, guidance: { ...state.guidance, inspections: [...state.guidance.inspections, id] }, feedback: null }
+    }
+    case 'ACKNOWLEDGE_DIALOGUE': {
+      if (!['outpost', 'preparation', 'launch', 'landing', 'debrief'].includes(state.phase) || typeof action.dialogueId !== 'string' || !/^[a-zA-Z0-9:._-]{1,120}$/.test(action.dialogueId)) return withFeedback(state, 'That conversation is not available.', 'error')
+      if (state.guidance.completedDialogueIds.includes(action.dialogueId)) return state
+      return { ...state, guidance: { ...state.guidance, completedDialogueIds: [...state.guidance.completedDialogueIds, action.dialogueId].slice(-300) }, feedback: null }
+    }
 
     case 'BEGIN_LAUNCH':
     case 'COMPLETE_LAUNCH':
@@ -218,16 +229,18 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'ADVANCE_SOL':
       if (isTerminal(state)) return reject(action, 'game is terminal')
       if (state.phase !== 'outpost') return reject(action, 'sols can only advance during outpost gameplay')
-      if (state.sol >= state.actionLimits.maxSol) return reject(action, 'maximum sol reached')
+      if (state.completedSol >= state.actionLimits.maxSol) return reject(action, 'maximum sol reached')
       return refreshIceboundStatus({
         ...state,
-        sol: state.sol + 1,
-        completedSol: state.sol + 1,
-        actionsRemaining: state.actionLimits.maxActionsPerSol,
+        sol: Math.min(state.sol + 1, state.actionLimits.maxSol),
+        completedSol: state.sol,
+        actionsRemaining: state.sol < state.actionLimits.maxSol ? state.actionLimits.maxActionsPerSol : 0,
+        feedback: null,
       })
 
     case 'SPEND_ACTION_SLOT': {
       if (isTerminal(state)) return reject(action, 'game is terminal')
+      if (state.completedSol >= state.actionLimits.maxSol) return reject(action, 'game is terminal')
       if (state.phase !== 'outpost') return reject(action, 'major actions are only available at the outpost')
       if (!action.actionId.trim()) return reject(action, 'action ID is required')
       const actionId = action.actionId.trim()

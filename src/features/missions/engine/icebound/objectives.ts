@@ -19,7 +19,7 @@ export function validateObjective(context: IceboundContext, objectiveId: string)
   const capabilities = capabilitiesFor(context)
   if (objective.id === 'icebound.recon') {
     if (!capabilities.has('recon')) issues.push(iceboundIssue('RECON_CAPABILITY_REQUIRED', 'Deploy a reconnaissance rover or approved survey capability.'))
-    if (!context.readiness.baselineCapabilities.includes('recon') && (!context.readiness.roverOperational || !context.readiness.roverEnergyReady)) {
+    if (capabilities.has('rover') && (!context.readiness.roverOperational || !context.readiness.roverEnergyReady)) {
       issues.push(iceboundIssue('ROVER_NOT_READY', 'The survey rover must be working and ready for its trip.'))
     }
     issues.push(...fieldIssues(context, false), ...costIssues(context, balanceFor(context).recon, 1))

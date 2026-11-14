@@ -4,6 +4,7 @@ import type { MissionEffect } from '../../contracts.ts'
 import { LANDING_SITES } from '../../data/landingSites.ts'
 import { STORY_DECISION_OBJECTIVE_PREFIX } from '../../resolveStoryDecision.ts'
 import { validateManifest } from '../preparation/validateManifest.ts'
+import { reviewMissionPlan } from '../preparation/reviewMissionPlan.ts'
 
 /** Temporary adapter until C updates shared GamePhase; not a second GameState. */
 export type MissionProgressionPhase = Exclude<GamePhase, 'travel' | 'return'> | 'preparation'
@@ -93,7 +94,7 @@ export function validateMissionTransition(
     if (!preparation || preparation.status !== 'confirmed' ||
         preparation.confirmedAtRevision !== preparation.revision ||
         preparation.reviewedRevision !== preparation.revision || !preparation.latestReview?.allowed ||
-        !validateManifest(preparation.manifest, preparation.cargoCapacityUnits).valid) {
+        !validateManifest(preparation.manifest, preparation.cargoCapacityUnits).valid || !reviewMissionPlan(preparation.manifest, preparation.cargoCapacityUnits, preparation.supplies).allowed) {
       return reject('MANIFEST_NOT_CONFIRMED', 'Confirm a valid, current cargo manifest before launch.')
     }
   }

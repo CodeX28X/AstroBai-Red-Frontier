@@ -10,8 +10,8 @@ export const ICEBOUND_MISSION: MissionDefinition = {
 
 /** Illustrative game units only. No recurring simulation rates or physical safety limits. */
 export const ICEBOUND_BALANCE: IceboundBalance = {
-  earliestSol: 3, finalSol: 10, recon: { power: 3 }, travelPowerPerUnit: 1,
-  expedition: { 'rover-only': { power: 4 }, 'astronaut-team': { power: 1, oxygen: 6, water: 3, food: 2 }, combined: { power: 6, oxygen: 6, water: 3, food: 2 } },
-  sampling: { 'surface-sampling': { power: 2 }, 'subsurface-drilling': { power: 4 } },
-  analysis: { power: 2 },
+  earliestSol: 3, finalSol: 10, recon: { power: 1 }, travelPowerPerUnit: 0,
+  expedition: { 'rover-only': { power: 1 }, 'astronaut-team': { power: 0, oxygen: 1, water: 1, food: 1 }, combined: { power: 1, oxygen: 1, water: 1, food: 1 } },
+  sampling: { 'surface-sampling': { power: 1 }, 'subsurface-drilling': { power: 1 } },
+  analysis: { power: 1 },
 }

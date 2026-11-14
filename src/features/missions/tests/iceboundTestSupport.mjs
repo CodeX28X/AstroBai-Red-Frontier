@@ -10,7 +10,7 @@ export function fixture(scenarioId = 'icebound.training-v1') {
   for (const equipmentId of equipmentIds) game = gameReducer(game, { type: 'SET_EQUIPMENT_QUANTITY', equipmentId, quantity: 1 })
   for (const type of ['REVIEW_MANIFEST', 'CONFIRM_MANIFEST', 'BEGIN_LAUNCH', 'COMPLETE_LAUNCH']) game = gameReducer(game, { type })
   game = gameReducer(game, { type: 'SELECT_LANDING_SITE', siteId: 'landing-safe-zone' })
-  for (let sol = 0; sol < 3; sol++) game = gameReducer(game, { type: 'ADVANCE_SOL' })
+  while (game.sol < 3) game = gameReducer(game, { type: 'ADVANCE_SOL' })
   return {
     game: { ...game, facilities: { ...game.facilities, habitat: 'operational' } },
     mission: createIceboundState('test-run', scenarioId),
@@ -34,7 +34,7 @@ export function commit(context, resolution) {
   const resources = { ...context.game.resources }
   for (const [key, delta] of Object.entries(effects.resourceDeltas)) {
     resources[key] += delta
-    assert.ok(Number.isFinite(resources[key]) && resources[key] >= 0 && resources[key] <= 100)
+    assert.ok(Number.isFinite(resources[key]) && resources[key] >= 0 && resources[key] <= 10)
   }
   const objectives = [...context.game.objectives]
   for (const change of effects.objectiveChanges) {
@@ -50,7 +50,7 @@ export function commit(context, resolution) {
 export function act(context, intent) { return commit(context, iceboundEngine(context, intent)) }
 export function nextSol(context) { return { ...context, game: gameReducer(context.game, { type: 'ADVANCE_SOL' }) } }
 export function plan(siteId = 'icebound.lumen-shelf', method = 'rover-only', activity = 'subsurface-drilling') {
-  return { siteId, method, activity, equipmentIds: [...equipmentIds], supplies: { power: 30, oxygen: 15, water: 8, food: 8 } }
+  return { siteId, method, activity, equipmentIds: [...equipmentIds], supplies: { power: 2, oxygen: 1, water: 1, food: 1 } }
 }
 export function selected(siteId = 'icebound.lumen-shelf', scenarioId = 'icebound.training-v1') {
   let context = act(fixture(scenarioId), { type: 'RECON' })

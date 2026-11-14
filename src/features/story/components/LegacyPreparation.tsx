@@ -1,0 +1,19 @@
+import type { GameAction, GameState } from '../../../shared/types/game'
+import { EQUIPMENT_CATALOG } from '../../missions/data/equipmentCatalog'
+import { calculateManifestSummary } from '../../missions/engine/preparation/calculateManifestSummary'
+const icons: Record<string, string> = { 'life-support': '✚', power: '☀', maintenance: '⚒', shielding: '⬡', exploration: '▣', science: '⚗', food: '❧' }
+const scienceCargo = ['field-rover', 'repair-toolkit', 'soil-analysis-kit', 'sample-container-set', 'portable-oxygen-kit']
+export function LegacyPreparation({ state, dispatch }: { state: GameState; dispatch: (a: GameAction) => void }) {
+  const p = state.preparation, locked = p.status === 'confirmed'
+  const mass = calculateManifestSummary(p.manifest, p.cargoCapacityUnits).totalCargoMassUnits
+  function packScience() { for (const equipmentId of scienceCargo) dispatch({ type: 'SET_EQUIPMENT_QUANTITY', equipmentId, quantity: 1 }) }
+  return <section className="adventure-preparation">
+    <header><div><span className="overline">EARTH / PREPARATION</span><h1>Pack for a big adventure</h1><p>Our Mars home is ready. Choose extra tools for the crew.</p></div><div className="cargo-meter"><strong>{mass} / {p.cargoCapacityUnits}</strong><span>cargo spaces</span><progress max={p.cargoCapacityUnits} value={mass} aria-label="Cargo space used"/></div></header>
+    <div className="prep-content"><div className="equipment-grid">{EQUIPMENT_CATALOG.map(item => {
+      const quantity = p.manifest.optionalCargo.find(entry => entry.equipmentId === item.id)?.quantity ?? 0
+      return <article key={item.id} className={`equipment-card${quantity ? ' packed' : ''}`}><span className="equipment-picture" aria-hidden="true">{icons[item.category]}</span><div><h2>{item.name}</h2><p>{item.description}</p><small>{item.cargoMassUnits} spaces each</small></div><div className="quantity-control"><button type="button" disabled={locked || quantity === 0} aria-label={`Remove ${item.name}`} onClick={() => dispatch({ type: 'SET_EQUIPMENT_QUANTITY', equipmentId: item.id, quantity: quantity - 1 })}>−</button><output aria-label={`${item.name} quantity`}>{quantity}</output><button type="button" disabled={locked || quantity === item.maxQuantity} aria-label={`Pack ${item.name}`} onClick={() => dispatch({ type: 'SET_EQUIPMENT_QUANTITY', equipmentId: item.id, quantity: quantity + 1 })}>+</button></div></article>
+    })}</div><aside className="preparation-review"><span className="overline">CAPTAIN KIKI</span><h2>A little help packing?</h2><p>Scout, tools, sample jars, an analysis kit and EVA oxygen help ICEBOUND.</p><button type="button" disabled={locked} onClick={packScience}>Pack the science essentials</button><p>The base already has a lab and a drilling station.</p>{p.latestReview && <div className="review-result" role="status"><h3>{p.latestReview.allowed ? '✓ Ready' : '△ Needs Fixing'}</h3>{p.latestReview.blockers.map(item => <p key={item.code}>{item.explanation}</p>)}<details><summary>Optional tips ({p.latestReview.warnings.length + p.latestReview.recommendations.length})</summary>{[...p.latestReview.warnings,...p.latestReview.recommendations].map(item => <p key={item.code}>{item.explanation}</p>)}</details></div>}<small>Our outpost and cargo spaces are fictional game design.</small></aside></div>
+    <footer><p>BAI: {locked ? 'Cargo secured. Next stop: Mars!' : 'Choose your tools. Then ask Mission Control to check.'}</p>{locked ? <button className="primary" type="button" onClick={() => dispatch({ type: 'BEGIN_LAUNCH' })}>Go to launch →</button> : p.status === 'reviewed' && p.latestReview?.allowed ? <button className="primary" type="button" onClick={() => dispatch({ type: 'CONFIRM_MANIFEST' })}>Confirm cargo</button> : <button className="primary" type="button" onClick={() => dispatch({ type: 'REVIEW_MANIFEST' })}>Check with Mission Control</button>}</footer>
+  </section>
+}
+

@@ -19,7 +19,7 @@ test('creates the initial menu state and resources', () => {
   assert.equal(state.completedSol, 0)
   assert.equal(state.actionsRemaining, 2)
   assert.equal(state.actionLimits.maxActionsPerSol, state.actionsRemaining)
-  assert.deepEqual(state.resources, { power: 100, oxygen: 100, water: 100, food: 100 })
+  assert.deepEqual(state.resources, { power: 0, oxygen: 0, water: 0, food: 0 })
   assert.deepEqual(state, INITIAL_GAME_STATE)
 })
 
@@ -33,7 +33,9 @@ test('starts the game in preparation phase', () => {
 test('advances a sol without changing resources', () => {
   const started = createOutpostState()
   const advanced = gameReducer(started, { type: 'ADVANCE_SOL' })
-  assert.equal(advanced.sol, 1)
+  assert.equal(started.sol, 1)
+  assert.equal(started.completedSol, 0)
+  assert.equal(advanced.sol, 2)
   assert.equal(advanced.completedSol, 1)
   assert.equal(advanced.actionsRemaining, 2)
   assert.deepEqual(advanced.resources, started.resources)
@@ -160,8 +162,12 @@ test('caps the mission at ten sols', () => {
   const solTen = gameReducer(solNine, { type: 'ADVANCE_SOL' })
 
   assert.equal(solTen.sol, 10)
-  assert.equal(solTen.completedSol, 10)
-  assert.throws(() => gameReducer(solTen, { type: 'ADVANCE_SOL' }), /maximum sol reached/)
+  assert.equal(solTen.completedSol, 9)
+  assert.equal(gameReducer(solTen, { type: 'ENTER_DEBRIEF' }).feedback.kind, 'error')
+  const finished = gameReducer(solTen, { type: 'ADVANCE_SOL' })
+  assert.equal(finished.completedSol, 10)
+  assert.equal(finished.sol, 10)
+  assert.throws(() => gameReducer(finished, { type: 'ADVANCE_SOL' }), /maximum sol reached/)
 })
 
 test('rejects advancing after the game reaches a terminal outcome', () => {
@@ -202,6 +208,6 @@ test('rejects actions that are not implemented', () => {
     () => gameReducer(state, { type: 'UPDATE_RESOURCES', deltas: { power: -10 } }),
     /action is not implemented/,
   )
-  assert.equal(state.resources.power, 100)
+  assert.equal(state.resources.power, 0)
 })
 

@@ -6,6 +6,8 @@ import { resolveStoryDecision, STORY_DECISION_OBJECTIVE_PREFIX } from '../resolv
 function stateAt(phase, completedDecisionIds = []) {
   return {
     ...createInitialGameState(),
+    // Legacy proposal-only story resolver retains its original narrative units.
+    resources: { power: 100, oxygen: 100, water: 100, food: 100 },
     phase,
     objectives: completedDecisionIds.map((id) => ({
       id: `${STORY_DECISION_OBJECTIVE_PREFIX}${id}`,

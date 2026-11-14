@@ -10,7 +10,7 @@ export function MarsEffects({ dustStorm = false }: MarsEnvironment) {
 }
 
 export function MarsEnvironmentNotice({ dustStorm, solarStormWarning, crewSheltering }: MarsEnvironment) {
-  return <div className="environment-notice" role="status" aria-live="polite" aria-atomic="true">
+  return <div className={`environment-notice${!dustStorm && !solarStormWarning && !crewSheltering ? ' is-clear' : ''}`} role="status" aria-live="polite" aria-atomic="true">
     {dustStorm && <span>≋ Dust storm</span>}
     {solarStormWarning && <span>⚠ Solar storm warning</span>}
     {crewSheltering && <span>⌂ Crew sheltering in Habitat</span>}

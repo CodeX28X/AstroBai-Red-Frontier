@@ -1,6 +1,6 @@
 import type { Resources } from '../types/game.ts'
 
-export const MAX_RESOURCE_VALUE = 100
+export const MAX_RESOURCE_VALUE = 10
 export const RESOURCE_KEYS = ['power', 'oxygen', 'water', 'food'] as const
 
 /** Validate every delta and resulting balance before returning a candidate immutable resource state. */
@@ -21,10 +21,10 @@ export function resolveResourceEffects(
       }
       const resource = key as keyof Resources
       const value = resources[resource] + delta
-      if (!Number.isFinite(value) || value < 0 || value > MAX_RESOURCE_VALUE) {
+      if (!Number.isFinite(value) || value < 0) {
         return { allowed: false, reason: `The proposed ${resource} balance is outside its safe range.` }
       }
-      resources[resource] = value
+      resources[resource] = delta > 0 ? Math.min(MAX_RESOURCE_VALUE, value) : value
     }
   }
   return { allowed: true, resources: RESOURCE_KEYS.every((resource) => resources[resource] === current[resource]) ? current : resources }

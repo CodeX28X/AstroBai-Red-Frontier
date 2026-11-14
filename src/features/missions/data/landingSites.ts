@@ -11,6 +11,12 @@ export interface LandingSiteDefinition {
   feedbackId: string
 }
 
+/** Fictional landing logistics, in the same 0–10 units shown before selection. */
+export const LANDING_RESOURCE_EFFECTS: Record<string, Partial<Resources>> = {
+  'landing-safe-zone': { power: -1, oxygen: 1 },
+  'landing-research-zone': { power: -2, water: 2 },
+}
+
 /** Reuses existing narrative content and abstract balancing proposals; no travel prerequisite. */
 export const LANDING_SITES: readonly LandingSiteDefinition[] = STORY_DECISIONS
   .filter((decision) => decision.phase === 'landing')
@@ -18,6 +24,6 @@ export const LANDING_SITES: readonly LandingSiteDefinition[] = STORY_DECISIONS
     id: decision.id,
     title: decision.title,
     description: decision.description,
-    resourceDeltas: { ...decision.resourceEffectProposal },
+    resourceDeltas: { ...LANDING_RESOURCE_EFFECTS[decision.id] },
     feedbackId: decision.educationalFeedbackId,
   }))

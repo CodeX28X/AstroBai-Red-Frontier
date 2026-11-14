@@ -1,0 +1,24 @@
+{
+  "results": [
+    "preparation 1366×768: no page overflow",
+    "Zero counters, ±1, max 10, immediate capacity, targeted review, locked conversion",
+    "outpost 1366×768: no page overflow",
+    "outpost 1366×768: full viewport map, overlay HUD, proportional artwork, unobstructed targets",
+    "Portrait sequence, double-click debounce, Space completion and action focus verified",
+    "Guided early sols, stepped plan, positive ICEBOUND, save/dialogue persistence",
+    "desktop-1920: no page overflow",
+    "desktop-1920: full viewport map, overlay HUD, proportional artwork, unobstructed targets",
+    "tablet: no page overflow",
+    "tablet: full viewport map, overlay HUD, proportional artwork, unobstructed targets",
+    "mobile: no page overflow",
+    "mobile: full viewport map, overlay HUD, proportional artwork, unobstructed targets",
+    "Ten-sol ending with real science and non-negative resources",
+    "preparation 390×844: no page overflow",
+    "Cinder Flats: No Ice Found Here, assigned actors, reduced motion, touch input",
+    "preparation 1024×768: no page overflow",
+    "Echo Ridge: Not Sure Yet, assigned actors, reduced motion",
+    "preparation 1024×768: no page overflow",
+    "No science kit: actionable blocker and valid outpost ending"
+  ],
+  "errors": []
+}

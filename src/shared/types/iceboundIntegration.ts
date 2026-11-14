@@ -26,6 +26,7 @@ export interface CommittedIceboundEvent {
 
 /** Trusted scenario initialization, never a client-dispatchable resource/readiness override. */
 export interface GameInitializationOptions {
+  preparationMode?: 'supplies'
   runId?: string
   scenarioId?: IceboundScenarioId
   installedCapabilities?: readonly IceboundCapability[]

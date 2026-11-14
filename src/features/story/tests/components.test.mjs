@@ -20,6 +20,13 @@ after(() => {
   rmSync(scratch, { recursive: true, force: true });
 });
 const entries = [
+  ['CharacterDialogue', 'components/CharacterDialogue.tsx'],
+  ['AdventurePreparation', 'components/AdventurePreparation.tsx'],
+  ['CHARACTERS', 'data/characters.ts'],
+  ['createInitialGameState', '../../shared/store/gameReducer.ts'],
+  ['gameReducer', '../../shared/store/gameReducer.ts'],
+  ['ResourceHud', 'components/ResourceHud.tsx'],
+  ['CAMPAIGN_OPTIONS', '../../shared/store/campaign.ts'],
   ['MainMenu', 'components/MainMenu.tsx'],
   ['SceneFrame', 'components/SceneFrame.tsx'],
   ['OutpostSlot', 'components/OutpostSlot.tsx'],
@@ -44,8 +51,42 @@ await build({
   },
 });
 const require = createRequire(import.meta.url);
-const { MainMenu, SceneFrame, OutpostSlot, DeveloperAExperience, FacilityInspection, PowerPlanPanel, experienceFixture, previewPresets, presetValidation, feedbackCopy, formatCopy } = require(join(scratch, 'components.cjs'));
+const { MainMenu, SceneFrame, OutpostSlot, DeveloperAExperience, FacilityInspection, PowerPlanPanel, experienceFixture, previewPresets, presetValidation, feedbackCopy, formatCopy, CharacterDialogue, AdventurePreparation, CHARACTERS, createInitialGameState, gameReducer, ResourceHud, CAMPAIGN_OPTIONS } = require(join(scratch, 'components.cjs'));
 const render = (component, props) => renderToStaticMarkup(React.createElement(component, props));
+test('spoken dialogue has the correct replaceable portrait, name and continue control', () => {
+  for (const [speakerId, speaker] of Object.entries(CHARACTERS)) {
+    const guide = { id: `portrait.${speakerId}`, speakerId, speakerName: speaker.name, text: 'Let us check together.', objectiveId: 'presentation', title: 'Hello', actionLabel: 'Explore' };
+    const html = render(CharacterDialogue, { guide, completed: false, onComplete() {}, actionRef: { current: null } });
+    assert.ok(html.includes(speaker.portrait));assert.ok(html.includes(`${speaker.name} portrait placeholder`));assert.match(html,/Tap to continue/);assert.match(html,/type="button"/);
+  }
+});
+test('new preparation renders exactly four supply cards at zero and an opt-in science kit', () => {
+  const html = render(AdventurePreparation, { state: createInitialGameState(CAMPAIGN_OPTIONS), dispatch() {} });
+  assert.equal((html.match(/data-supply=/g) ?? []).length,4);
+  for (const name of ['Energy Pack','Oxygen Tank','Water Container','Food Pack']) assert.ok(html.includes(`${name} quantity`));
+  assert.equal((html.match(/quantity">0\/10<\/output>/g) ?? []).length,4);
+  assert.match(html,/ICEBOUND science kit/);assert.doesNotMatch(html,/checked=""/);
+});
+
+test('entering preparation displays four 5/10 counters and 20/35 cargo', () => {
+  const state = gameReducer(createInitialGameState(CAMPAIGN_OPTIONS), { type: 'START_GAME' });
+  const html = render(AdventurePreparation, { state, dispatch() {} });
+  assert.equal((html.match(/quantity">5\/10<\/output>/g) ?? []).length, 4);
+  assert.match(html, /20 \/ 35/);
+});
+
+test('HUD numbers and native progress bars follow each authoritative resource update', () => {
+  const state = gameReducer(createInitialGameState(), { type: 'START_GAME' });
+  for (const resources of [{power:7,oxygen:2,water:0,food:10}, {power:6,oxygen:3,water:1,food:9}]) {
+    const html = render(ResourceHud, { resources, onInspect() {} });
+    for (const [key, name] of Object.entries({power:'Energy',oxygen:'Oxygen',water:'Water',food:'Food'})) {
+      assert.ok(html.includes(`<strong>${resources[key]}/10</strong>`));
+      assert.ok(html.includes(`aria-label="${name} reserve" max="10" value="${resources[key]}"`));
+    }
+    assert.equal((html.match(/<progress/g) ?? []).length,4);
+  }
+  assert.deepEqual(state.resources, {power:0,oxygen:0,water:0,food:0});
+});
 
 test('menu Continue is unavailable without a save and emits only a supplied command', () => {
   let command = null;

@@ -15,18 +15,20 @@ export function createIceboundPlanningState(): IceboundPlanningState {
 
 export function createInitialIceboundReadiness(options: GameInitializationOptions): IceboundReadiness {
   const known: readonly IceboundCapability[] = ['recon', 'rover', 'eva', 'surface-sampling', 'drilling', 'sample-handling', 'field-analysis', 'lab-analysis']
-  const installed = [...new Set(options.installedCapabilities ?? [])]
+  const standard: IceboundCapability[] = ['recon', 'rover', 'eva', 'surface-sampling', 'drilling', 'sample-handling', 'lab-analysis']
+  const installed = [...new Set([...standard, ...options.installedCapabilities ?? []])]
   if (installed.some((capability) => !known.includes(capability))) throw new Error('Unknown installed ICEBOUND capability.')
   return { deployedEquipment: [], baselineCapabilities: installed, roverOperational: false, roverEnergyReady: false,
     crewAvailable: false, crewSafeForEva: false, communicationsReady: false, laboratoryOperational: false,
     weather: 'clear', radiation: 'clear' }
 }
 
-/** Commission only the declared pre-deployed habitat/communications and actual confirmed cargo. */
+/** Commission standard outpost capabilities and exactly the confirmed optional cargo. */
 export function commissionIceboundOutpost(state: GameState): GameState {
   const deployedEquipment = state.preparation.manifest.optionalCargo.map((entry) => ({ equipmentId: entry.equipmentId, status: 'operational' as const }))
-  const rover = deployedEquipment.some((item) => item.equipmentId === 'field-rover')
+  const rover = state.iceboundReadiness.baselineCapabilities.includes('rover') || deployedEquipment.some((item) => item.equipmentId === 'field-rover')
   return refreshIceboundStatus({ ...state,
+    sol: 1, completedSol: 0,
     facilities: { ...state.facilities, habitat: 'operational' },
     iceboundReadiness: { ...state.iceboundReadiness, deployedEquipment,
       roverOperational: rover, roverEnergyReady: rover, crewAvailable: true, crewSafeForEva: true,

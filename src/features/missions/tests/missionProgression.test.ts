@@ -37,8 +37,8 @@ test('launch transitions directly to landing', () => {
 test('valid site selection proposes outpost and explicit resource requirements', () => {
   const result = validateMissionTransition(context('landing'), { type: 'SELECT_LANDING_SITE', siteId: 'landing-safe-zone' })
   assert.equal(result.nextPhase, 'outpost')
-  assert.deepEqual(result.resourceRequirements, { power: 5, food: 5 })
-  assert.deepEqual(result.effects[0].resourceDeltas, { power: -5, food: -5 })
+  assert.deepEqual(result.resourceRequirements, { power: 1 })
+  assert.deepEqual(result.effects[0].resourceDeltas, { power: -1, oxygen: 1 })
 })
 test('wrong-phase actions cannot skip phases', () => {
   for (const type of ['BEGIN_LAUNCH', 'COMPLETE_LAUNCH', 'SELECT_LANDING_SITE', 'ENTER_DEBRIEF']) {

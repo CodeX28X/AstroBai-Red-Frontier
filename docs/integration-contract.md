@@ -1,5 +1,32 @@
 ﻿# Integration contract
 
+## Resource-scale fix — 2026-11-15
+
+The resource-balancing follow-up supersedes earlier scale values: all authoritative resources are 0–10, preparation storage starts empty before START_GAME selects 5 each, cargo is 35 shared units, and confirmation copies the selected quantities exactly (no baseline or conversion). Explicit optional cargo still uses its catalog weight; standard science equipment is a capability baseline, not a hidden cargo item. Landing uses shared small integer deltas; positive rewards clamp at 10 while unaffordable costs reject atomically. Basic ICEBOUND capabilities are included, preserving existing optional field-instrument/sealed-container quality bonuses and all phase, safety, objective and action checks. Operation costs are recalibrated for this scale. Science classification is unchanged. Save schema 3 rejects old-scale histories rather than silently changing their results. This scope changes resource/mission rules and their display only; story guidance, dialogue, animations, map geometry, presentations and NASA content remain unchanged.
+
+## Overlay HUD and supply preparation — 2026-11-15
+
+The follow-up request authorizes a four-supply loadout and configurable conversion. The new playable campaign uses `PreparationState.supplies` (power/oxygen/water/food integer counters 0–10), with null retaining the legacy equipment-only contract. Each selected pack costs one cargo space and adds six resource units to a documented baseline of 24 per resource. Capacity is 24 shared spaces. Each category needs at least one pack; the suggested selection is 4/2/2/2. The explicit science-kit choice includes the existing five catalog IDs, costs their existing 14 spaces, and is never auto-granted. Existing equipment/dependency validation remains authoritative. Draft changes do not alter reserves; valid confirmation initializes reserves once.
+
+There is still no recurring consumption or power/repair engine. Balance tests use actual landing and ICEBOUND costs, not invented daily rates. Energy inspection replaces any unavailable power-plan step; no fake repair or power confirmation is presented.
+
+Free inspection and dialogue acknowledgments persist in `GameState.guidance` through typed actions. They grant no resources, major jobs or mission objectives. The director reads these observations plus authoritative missions/readiness to derive guidance. Portraits are centralized labeled SVG placeholders. Dialogue advancement never dispatches a gameplay decision.
+
+Save v2 records a fixed campaign discriminator and validated action history. V1 histories replay under the legacy campaign configuration; a new mission always starts the supply campaign. No raw resource state or arbitrary initialization options are loaded. A/B own overlays and dialogue; C owns reserve initialization/save/presentation observations; D owns preparation checks/mission rules; E reviews balancing documentation. Independent owner review remains a merge prerequisite, not a claimed sign-off.
+
+## Child-friendly adventure integration — 2026-11-15
+
+Scope authorized by the overhaul request: A connects the existing preparation/progression/ICEBOUND actions to a state-derived dialogue director; B supplies local collision-aware movement and arrival callbacks. C remains the only writer of gameplay state. No animation frame, inspection, airlock presentation, or dialogue grants resources or objectives. Existing feature previews remain available.
+
+- Optional `MarsMap.navigation` supplies a uniquely identified destination, actor kind, assigned companion, readiness and arrival callback. Arrival opens context only; validated reducer commands perform work. Surface walking requires existing EVA capability, crew readiness, communications, supplies and field hazard checks. Rovers require confirmed cargo/readiness. Interior movement uses the same controller with room-specific obstacles.
+- Optional `FacilityInterior.workEventId` is a committed mission-event identifier supplied only after successful analysis. It activates local work presentation without awarding progress. Resource status bands (20/40 game units) are display cues only and require C/E review; they are not physical safety thresholds.
+- The playable campaign uses existing trusted initialization options `installedCapabilities: ['lab-analysis', 'drilling']`: fictional pre-installed science facilities, separate from cargo and NASA specifications. The default engine initializer is unchanged. This resolves the otherwise impossible lab/drill path without UI readiness overrides.
+- Save version 1 stores a bounded journal of supported actions and replays them through the reducer with fixed campaign configuration. Raw resource/readiness state is never loaded. UI preferences remain separate. Dialogue derives from persisted objective/event IDs and cannot grant rewards.
+- Landing starts Sol 1. `ADVANCE_SOL` completes the current sol, then starts the next; completing Sol 10 leaves the counter at 10 and unlocks debrief. This corrects the Sol 0/early-ending defect.
+- There is **no recurring simulation, battery, allocation, repair, life-support fault or storm-response contract** in this checkout. Do not activate draft numeric formulas, obsolete cruise choices, evidence-point scoring or Earth-return checks. Unsupported operations are not presented as successes. Design/balance and independent C/D/E review of future systems remain required.
+
+Affected owners: A/B presentation, C store/save/Sol boundary, D existing mission commands, E cached science and QA. This records implementation scope; it does not claim independent owner sign-off.
+
 ## Current ownership agreement
 
 - **Developer C** owns the shared reducer, centralized state, and resource calculations.
