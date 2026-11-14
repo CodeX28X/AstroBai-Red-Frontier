@@ -44,26 +44,61 @@ h1 {
   font-size: 1.15rem;
 }
 
-.team-card ul {
-  display: grid;
-  gap: 0.9rem;
-  margin: 1.5rem 0 0;
-  padding: 0;
-  list-style: none;
+.team-card h3 {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 0.95rem;
+  text-transform: capitalize;
 }
 
-.team-card li {
+.state-grid,
+.resource-grid {
   display: grid;
-  grid-template-columns: 2rem 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
   gap: 0.75rem;
-  align-items: start;
-  color: #c5cdd4;
-  line-height: 1.5;
+  margin: 1.25rem 0 0;
 }
 
-.team-label {
-  color: #f3a287;
+.state-grid div,
+.resource-grid div {
+  padding: 0.85rem;
+  border-radius: 0.65rem;
+  background: #202b35;
+}
+
+dt {
+  color: #aebbc5;
+  font-size: 0.8rem;
+  text-transform: capitalize;
+}
+
+dd {
+  margin: 0.3rem 0 0;
+  font-size: 1.2rem;
   font-weight: 700;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.actions button {
+  padding: 0.7rem 1rem;
+  border: 1px solid #e26b4b;
+  border-radius: 0.5rem;
+  color: #fff;
+  background: #a9432c;
+  font: inherit;
+  cursor: pointer;
+}
+
+.actions button:disabled {
+  border-color: #45515b;
+  color: #87939c;
+  background: #303a43;
+  cursor: not-allowed;
 }
 
 .status {

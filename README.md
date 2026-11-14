@@ -28,3 +28,11 @@ npm run lint
 ## Project map
 
 See [docs/architecture.md](docs/architecture.md), [docs/team-ownership.md](docs/team-ownership.md), and [docs/integration-contract.md](docs/integration-contract.md) for structure, ownership, and the shared-interface agreement process. Follow [AGENTS.md](AGENTS.md) when contributing.
+
+## Tests
+
+```sh
+npm test
+```
+
+Tests use Node's built-in test runner and native TypeScript type stripping (Node.js 24); no test dependencies are added.
