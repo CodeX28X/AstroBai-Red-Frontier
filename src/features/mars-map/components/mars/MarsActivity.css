@@ -1,0 +1,52 @@
+/* Small decorative loops only. Facility status and motion preferences own the gate. */
+.map-section .status-operational .habitat-flag{transform-box:fill-box;transform-origin:left center;animation:pennant-idle 6s steps(3,end) infinite}
+.map-section .status-operational .habitat-window{animation:window-warmth 7s ease-in-out infinite}
+.map-section .status-operational .solar-glint{animation:panel-glint 12s linear infinite}
+.map-section .status-operational .outpost-leaf{transform-box:fill-box;transform-origin:bottom center;animation:leaf-sway 7s ease-in-out infinite}
+.map-section .status-operational .outpost-leaf:nth-child(even){animation-delay:-3s}
+.map-section .status-operational .lab-signal{animation:antenna-signal 5s ease-in-out infinite}
+.map-section .status-operational .lab-scan{animation:lab-console-scan 5.5s steps(8,end) infinite}
+.map-section .site-available .site-crystal{animation:site-idle 5s ease-in-out infinite}
+.map-section .site-active .site-crystal{animation:antenna-signal 4s ease-in-out infinite}
+.map-section .patrol-rover .rover-beacon{animation:antenna-signal 4.5s ease-in-out infinite}
+.map-section .patrol-rover .rover-hub{transform-box:fill-box;transform-origin:center;animation:wheel-idle 1.8s steps(4,end) infinite}
+.map-section .facility-walker:not(.is-walking) .astronaut-arm{transform-box:fill-box;transform-origin:top left;animation:arrival-wave 1.1s ease-in-out 1}
+.facility-interior.interior-operational .room-fan-blades{transform-box:fill-box;transform-origin:center;animation:wheel-idle 4s steps(12,end) infinite}
+.facility-interior.interior-operational .mug-steam{animation:steam-idle 6s ease-out infinite}
+.facility-interior.interior-operational .water-bubble{animation:water-idle 5s ease-in infinite}
+.facility-interior.interior-operational .water-bubble.second{animation-delay:-2.5s}
+.facility-interior.interior-operational .sample-glimmer{animation:window-warmth 6s ease-in-out infinite}
+.facility-interior.interior-operational .monitor-cursor{animation:monitor-readout 7s linear infinite}
+.facility-interior.interior-operational .plant-leaf{transform-box:fill-box;transform-origin:bottom center;animation:leaf-sway 7s ease-in-out infinite}
+.facility-interior.interior-operational .bay-indicator{animation:antenna-signal 4s ease-in-out infinite}
+.facility-interior.interior-operational .bay-indicator.second{animation-delay:-2s}
+.facility-interior .interior-description{animation:inspection-reveal 180ms ease-out}
+.facility-interior.interior-offline .monitor-cursor,.facility-interior.interior-offline .sample-glimmer{opacity:0}
+.facility-interior.interior-offline .bay-indicator{fill:#557275}
+
+@keyframes pennant-idle{0%,100%{transform:scaleX(1)}50%{transform:scaleX(.82)}}
+@keyframes window-warmth{0%,100%{opacity:1}50%{opacity:.72}}
+@keyframes panel-glint{0%,15%{transform:translateX(0);opacity:0}18%{opacity:.22}65%{opacity:.22}72%,100%{transform:translateX(145px);opacity:0}}
+@keyframes leaf-sway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(3deg)}}
+@keyframes antenna-signal{0%,100%{opacity:1}45%,65%{opacity:.45}}
+@keyframes lab-console-scan{0%,100%{transform:translateX(0)}50%{transform:translateX(15px)}}
+@keyframes site-idle{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+@keyframes wheel-idle{to{transform:rotate(360deg)}}
+@keyframes arrival-wave{0%,100%{transform:rotate(0)}25%,65%{transform:rotate(-25deg)}45%,85%{transform:rotate(-8deg)}}
+@keyframes steam-idle{0%{opacity:0;transform:translateY(0)}30%{opacity:.45}100%{opacity:0;transform:translate(2px,-9px)}}
+@keyframes water-idle{0%{opacity:0;transform:translateY(0)}20%{opacity:.6}85%{opacity:.6}100%{opacity:0;transform:translateY(-22px)}}
+@keyframes monitor-readout{from{transform:translateX(0)}to{transform:translateX(68px)}}
+@keyframes inspection-reveal{from{opacity:.6;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+
+.map-section.motion-paused *,.map-section.motion-paused *::before,.facility-interior.interior-paused *{animation-play-state:paused!important}
+@media(prefers-reduced-motion:reduce){
+  .map-section .habitat-flag,.map-section .habitat-window,.map-section .solar-glint,
+  .map-section .outpost-leaf,.map-section .lab-signal,.map-section .lab-scan,
+  .map-section .site-crystal,.map-section .rover-beacon,.map-section .rover-hub,
+  .map-section .astronaut-arm,.facility-interior .room-fan-blades,
+  .facility-interior .mug-steam,.facility-interior .water-bubble,
+  .facility-interior .sample-glimmer,.facility-interior .monitor-cursor,
+  .facility-interior .plant-leaf,.facility-interior .bay-indicator,
+  .facility-interior .interior-description{animation:none!important;transform:none!important}
+  .map-section .solar-glint,.facility-interior .mug-steam,.facility-interior .water-bubble{opacity:0}
+}
