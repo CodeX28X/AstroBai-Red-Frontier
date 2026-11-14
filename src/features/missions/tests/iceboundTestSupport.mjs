@@ -1,17 +1,55 @@
 import assert from 'node:assert/strict'
 import { gameReducer, createInitialGameState } from '../../../shared/store/gameReducer.ts'
 import { createIceboundState, iceboundEngine } from '../engine/icebound/index.ts'
+import { createPreparationState, preparationEngine } from '../engine/preparation/preparationEngine.ts'
+import { validateMissionTransition } from '../engine/progression/missionProgression.ts'
+import { PREDEPLOYED_OUTPOST_BASELINE } from '../data/equipmentCatalog.ts'
 
 export const equipmentIds = ['field-rover', 'repair-toolkit', 'soil-analysis-kit', 'sample-container-set', 'portable-oxygen-kit']
 
 export function fixture(scenarioId = 'icebound.training-v1') {
-  let game = gameReducer(createInitialGameState(), { type: 'START_GAME' })
-  for (const equipmentId of equipmentIds) game = gameReducer(game, { type: 'SET_EQUIPMENT_QUANTITY', equipmentId, quantity: 1 })
-  for (const type of ['REVIEW_MANIFEST', 'CONFIRM_MANIFEST', 'BEGIN_LAUNCH', 'COMPLETE_LAUNCH']) game = gameReducer(game, { type })
-  game = gameReducer(game, { type: 'SELECT_LANDING_SITE', siteId: 'landing-safe-zone' })
-  for (let sol = 0; sol < 3; sol++) game = gameReducer(game, { type: 'ADVANCE_SOL' })
+  let preparation = createPreparationState({
+    missionId: 'icebound', baselineId: PREDEPLOYED_OUTPOST_BASELINE.id, optionalCargo: [],
+  }, 30)
+  const prepare = (intent) => {
+    const result = preparationEngine(preparation, intent)
+    assert.equal(result.accepted, true, result.issues[0]?.message)
+    preparation = result.state
+  }
+  for (const equipmentId of equipmentIds) prepare({ type: 'SET_EQUIPMENT_QUANTITY', equipmentId, quantity: 1 })
+  prepare({ type: 'REVIEW_MANIFEST' })
+  prepare({ type: 'CONFIRM_MANIFEST' })
+
+  // Current GameAction does not host Phase 3 preparation/progression yet. Build the
+  // test's outpost boundary using the actual mission engines, not unsupported reducer actions.
+  const initial = createInitialGameState()
+  let opening = { phase: initial.phase, outcome: initial.outcome, objectives: initial.objectives, preparation, completedSol: 0 }
+  const resources = { ...initial.resources }
+  for (const intent of [
+    { type: 'START_GAME' }, { type: 'BEGIN_LAUNCH' }, { type: 'COMPLETE_LAUNCH' },
+    { type: 'SELECT_LANDING_SITE', siteId: 'landing-safe-zone' },
+  ]) {
+    const result = validateMissionTransition(opening, intent)
+    assert.equal(result.allowed, true, result.message)
+    const objectives = [...opening.objectives]
+    for (const effect of result.effects) {
+      for (const [resource, delta] of Object.entries(effect.resourceDeltas)) resources[resource] += delta
+      for (const change of effect.objectiveChanges) objectives.push({ id: change.objectiveId, completed: change.completed })
+    }
+    opening = { ...opening, phase: result.nextPhase, objectives }
+  }
+  assert.equal(opening.phase, 'outpost')
+  // Habitat readiness represents the documented commissioned baseline, established before Sol 1.
+  let game = { ...initial, phase: opening.phase, resources, objectives: opening.objectives,
+    facilities: { ...initial.facilities, habitat: 'operational' } }
+  for (let sol = 0; sol < 3; sol++) {
+    game = gameReducer(game, { type: 'ADVANCE_SOL' })
+    assert.equal(game.outcome, null, 'fixture must genuinely survive to reconnaissance')
+    assert.equal(game.phase, 'outpost')
+  }
   return {
-    game: { ...game, facilities: { ...game.facilities, habitat: 'operational' } },
+    game,
+    preparation,
     mission: createIceboundState('test-run', scenarioId),
     readiness: {
       deployedEquipment: equipmentIds.map((equipmentId) => ({ equipmentId, status: 'operational' })),

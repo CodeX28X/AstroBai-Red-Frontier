@@ -12,9 +12,15 @@ or live frontend. Developer C must review and implement the shared adapter and a
 Developer A can then render the exported data and dispatch commands. Member E should review the
 educational explanations and game abstractions before release.
 
-The current shared store has resources, action slots, facilities, preparation, outcome and sol state.
-It does **not** yet define crew health, a rover battery, deployed equipment, laboratory state,
-weather advisories, or power allocation. Do not silently assume these are ready.
+The current branch's shared store has resources, action slots, facilities, outcome and sol state.
+It does **not** host Phase 3 preparation or its actions. `IceboundContext.preparation` explicitly
+accepts the existing `PreparationState` snapshot produced by the preparation engine. It is a reference
+to that confirmed-manifest source, not a copy of preparation inside ICEBOUND state. C should pass the
+authoritative snapshot here (for example, `state.preparation` once that shared integration is merged).
+No cast, optional hidden GameState property, or replacement preparation type is used.
+
+The shared store also does not yet define crew health, a rover battery, deployed equipment,
+laboratory state, weather advisories, or power allocation. Do not silently assume these are ready.
 
 ## Data and objective progression
 
@@ -78,6 +84,7 @@ The following are proposals; shared files have not been changed:
 ```ts
 // src/shared/types/game.ts — C to approve
 icebound: IceboundState
+preparation: PreparationState // existing Phase 3 type, when C integrates preparation
 // Optional general mission infrastructure already proposed in docs/integration-contract.md:
 appliedResolutionIds: string[]
 
@@ -94,7 +101,8 @@ Initialize with a stable per-game run ID (C chooses it once); do not generate ti
 the engine. All sample/proposal IDs are deterministic and namespaced by that run. Reset the slice
 and all applied-ID records together on a new game. Never change the scenario after starting a run.
 
-Build `IceboundContext` inside C's reducer using the current GameState, current slice and explicit
+Build `IceboundContext` inside C's reducer using the current GameState, the existing confirmed
+preparation snapshot as `context.preparation`, the current mission slice and explicit
 `IceboundReadiness` facts:
 
 - `deployedEquipment`: existing confirmed cargo IDs plus operational/damaged/offline status.
@@ -149,10 +157,14 @@ Site comparison/selection, planning/review and report recording cost zero slots.
 dispatch SPEND_ACTION_SLOT: that would split a transaction and may double-charge it. C must commit
 the slot cost with resource/progress effects. No resources or slots change on rejection.
 
-The end-to-end test uses a real confirmed cargo manifest (14 of 30 abstract cargo units), the real
-revised opening flow and C's actual ADVANCE_SOL action to reset slots. Four major actions fit in Sols
-3 and 4 under the current illustrative one-off budgets. This verifies compatibility with current
-code, not with future recurring resource rates that C/E have not agreed yet.
+The end-to-end test uses a real engine-confirmed cargo manifest (14 of 30 abstract cargo units).
+Its test-only outpost boundary is assembled from D's validated opening-transition proposals and C's
+initial resources, including the actual landing costs. The commissioned habitat is established
+before advancing sols. C's actual ADVANCE_SOL action then advances to Sol 3 and resets slots between
+ICEBOUND operations. Four major actions fit in Sols 3 and 4 without resource top-ups or a fabricated
+terminal success. This is not a claim that the current shared reducer already supports preparation
+or the revised opening actions. Current ADVANCE_SOL has no recurring resource consumption; the test
+does not disable any survival rule or change the ten-sol cap.
 
 ## Atomic application and replay protection
 
@@ -247,3 +259,21 @@ phase in mission-owned legacy types only; no story content or current shared pha
 
 No edits to shared GameState, GameAction, reducer, provider, React screens or the equipment catalog
 are part of this feature. A pre-existing untracked root file was left untouched.
+
+### Preparation adapter and fixture regression fix
+
+The earlier ICEBOUND adapter incorrectly read `game.preparation`, which does not exist in the
+authoritative GameState on this branch. It now reads the explicitly typed preparation input.
+Confirmed revision, review, manifest validity and deployed-inventory checks remain unchanged.
+
+The earlier JavaScript fixture dispatched SET_EQUIPMENT_QUANTITY/REVIEW_MANIFEST/CONFIRM_MANIFEST and
+new opening actions to an older reducer that does not implement them. Its exhaustive fallback is
+safe only for compile-time-checked GameAction callers: an unknown runtime action was returned as
+state. `outcome` consequently became undefined, and `outcome !== null` correctly rejected the next
+ADVANCE_SOL as terminal. This was state-shape corruption, not a resource-depletion failure.
+
+The fixture now calls the actual preparation and progression engines to build its test boundary,
+and only dispatches supported sol actions to the shared reducer. Regression tests verify its state
+shape, real landing costs, current confirmation, unchanged terminal guards and ten-sol boundary.
+C's live preparation/action integration and unknown-runtime-action handling remain separate shared
+store work; this fix does not register new shared actions or modify the central reducer.
