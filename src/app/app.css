@@ -53,7 +53,7 @@ h1 {
 .state-grid,
 .resource-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
   gap: 0.75rem;
   margin: 1.25rem 0 0;
 }
@@ -77,14 +77,9 @@ dd {
   font-weight: 700;
 }
 
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
-}
-
-.actions button {
+.primary-action,
+.reset-action {
+  margin-top: 1.25rem;
   padding: 0.7rem 1rem;
   border: 1px solid #e26b4b;
   border-radius: 0.5rem;
@@ -94,14 +89,59 @@ dd {
   cursor: pointer;
 }
 
-.actions button:disabled {
-  border-color: #45515b;
-  color: #87939c;
-  background: #303a43;
-  cursor: not-allowed;
+.choice-list {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
 }
 
-.status {
-  margin-top: 2rem;
-  font-size: 0.7rem;
+.choice-list h3 {
+  margin: 0 0 0.25rem;
+}
+
+.choice-card {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+  border: 1px solid #45515b;
+  border-radius: 0.65rem;
+  color: #c5cdd4;
+  background: #202b35;
+  font: inherit;
+  line-height: 1.45;
+  text-align: left;
+  cursor: pointer;
+}
+
+.choice-card:hover,
+.choice-card:focus-visible {
+  border-color: #f3a287;
+  outline: none;
+}
+
+.choice-title {
+  color: #f3a287;
+  font-weight: 700;
+}
+
+.feedback,
+.completion-message {
+  min-height: 1.5rem;
+  margin: 1.25rem 0 0;
+  color: #b7c1ca;
+  line-height: 1.5;
+}
+
+.feedback.error {
+  color: #ffab96;
+}
+
+.feedback.success,
+.completion-message {
+  color: #a8dfbd;
+}
+
+.reset-action {
+  border-color: #45515b;
+  background: #202b35;
 }

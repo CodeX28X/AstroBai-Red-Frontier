@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "node --test src/shared/store/gameReducer.test.mjs"
+    "test": "node --test src/shared/store/gameReducer.test.mjs src/features/missions/tests/validateStoryDecision.test.mjs src/features/missions/tests/resolveStoryDecision.test.mjs src/shared/store/storyDecision.integration.test.mjs src/features/missions/tests/equipmentCatalog.test.ts src/features/missions/tests/validateManifest.test.ts src/features/missions/tests/reviewMissionPlan.test.ts"
   },
   "dependencies": {
     "react": "^19.3.1",
