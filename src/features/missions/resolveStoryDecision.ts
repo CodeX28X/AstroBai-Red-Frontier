@@ -1,6 +1,6 @@
 ﻿import type { GameState, Resources } from '../../shared/types/game.ts'
 import type { MissionEffect, MissionResolution } from './contracts.ts'
-import { STORY_DECISIONS, type StoryDecisionChapter } from './storyDecisions.ts'
+import { STORY_DECISIONS, type StoryDecisionChapter, type LegacyStoryPhase } from './storyDecisions.ts'
 import { validateStoryDecision } from './validateStoryDecision.ts'
 
 export const STORY_DECISION_OBJECTIVE_PREFIX = 'story-decision:'
@@ -41,7 +41,9 @@ function insufficientResourceReason(
   return null
 }
 
-function rejected(reason: string, resourceRequirements: Partial<Resources> = {}): MissionResolution {
+export type LegacyStoryResolution = Omit<MissionResolution, 'nextPhase'> & { nextPhase: LegacyStoryPhase | null }
+
+function rejected(reason: string, resourceRequirements: Partial<Resources> = {}): LegacyStoryResolution {
   return {
     allowed: false,
     success: false,
@@ -56,7 +58,7 @@ function rejected(reason: string, resourceRequirements: Partial<Resources> = {})
 }
 
 /** Resolves an eligible choice into a proposal without mutating state or applying resources. */
-export function resolveStoryDecision(state: GameState, optionId: string): MissionResolution {
+export function resolveStoryDecision(state: GameState, optionId: string): LegacyStoryResolution {
   const validation = validateStoryDecision(state, optionId, {
     decidedChapters: getDecidedChapters(state),
   })

@@ -8,7 +8,9 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "node --test src/shared/store/gameReducer.test.mjs src/features/missions/tests/validateStoryDecision.test.mjs src/features/missions/tests/resolveStoryDecision.test.mjs src/shared/store/storyDecision.integration.test.mjs src/features/missions/tests/equipmentCatalog.test.ts src/features/missions/tests/validateManifest.test.ts src/features/missions/tests/reviewMissionPlan.test.ts"
+    "test": "node --test \"src/shared/store/*.test.mjs\" \"src/features/missions/tests/*.test.mjs\" \"src/features/missions/tests/*.test.ts\"",
+    "test:icebound": "node --test \"src/features/missions/tests/icebound*.test.mjs\"",
+    "typecheck:icebound": "tsc --ignoreConfig --noEmit --strict --target es2023 --module esnext --moduleResolution bundler --allowImportingTsExtensions --skipLibCheck --types vite/client src/features/missions/engine/icebound/index.ts"
   },
   "dependencies": {
     "react": "^19.3.1",

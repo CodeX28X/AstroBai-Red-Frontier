@@ -1,0 +1,8 @@
+import type { IceboundSite } from '../types/icebound.ts'
+
+/** All names, relative distances and hazards below are fictional game scenarios. */
+export const ICEBOUND_SITES: readonly IceboundSite[] = [
+  { id: 'icebound.lumen-shelf', name: 'Lumen Shelf (fictional)', fictional: true, terrain: 'gentle', travelRequirement: 1, scientificInterest: 'Compare surface material with a buried layer.', iceIndicator: 'Layer patterns could help guide an ice investigation.', methods: ['rover-only', 'astronaut-team', 'combined'], requiredCapabilities: ['sample-handling'], hazards: ['loose-dust'], scienceReferenceIds: ['nasa-swim', 'nasa-perseverance-objectives'] },
+  { id: 'icebound.cinder-flats', name: 'Cinder Flats (fictional)', fictional: true, terrain: 'uneven', travelRequirement: 2, scientificInterest: 'A useful comparison site even when a sample contains no ice.', iceIndicator: 'The available clues are weak and require testing.', methods: ['rover-only', 'combined'], requiredCapabilities: ['sample-handling'], hazards: ['crew-route-unavailable', 'loose-rock'], scienceReferenceIds: ['nasa-swim', 'nasa-perseverance-objectives'] },
+  { id: 'icebound.echo-ridge', name: 'Echo Ridge (fictional)', fictional: true, terrain: 'rough', travelRequirement: 3, scientificInterest: 'Investigate a place with uncertain evidence and limited access.', iceIndicator: 'Mixed clues may remain uncertain after one investigation.', methods: ['astronaut-team'], requiredCapabilities: ['sample-handling'], hazards: ['rover-route-unavailable', 'rough-footing'], scienceReferenceIds: ['nasa-swim', 'nasa-perseverance-objectives'] },
+]
