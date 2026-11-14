@@ -1,0 +1,130 @@
+[
+  {
+    "name": "menu-dusk",
+    "file": "menu-dusk.png",
+    "width": 1365,
+    "height": 763,
+    "sourceFile": "codex-clipboard-d3cf1040-d3b0-4f85-8457-08bae5dd387f.png",
+    "use": "supplied scene artwork"
+  },
+  {
+    "name": "launch-pad",
+    "file": "launch-pad.png",
+    "width": 1364,
+    "height": 762,
+    "sourceFile": "codex-clipboard-295e2f6b-b500-408d-99be-c9765bee96b9.png",
+    "use": "supplied scene artwork"
+  },
+  {
+    "name": "launch-pad-simple",
+    "file": "launch-pad-simple.png",
+    "width": 1364,
+    "height": 762,
+    "sourceFile": "codex-clipboard-b052b414-d146-4a4a-b116-8d77d839db28.png",
+    "use": "supplied scene artwork"
+  },
+  {
+    "name": "cruise-window",
+    "file": "cruise-window.png",
+    "width": 1365,
+    "height": 762,
+    "sourceFile": "codex-clipboard-ca898b7e-4da5-46bb-92d0-9c27fc8f6837.png",
+    "use": "supplied scene artwork"
+  },
+  {
+    "name": "cruise-cabin",
+    "file": "cruise-cabin.png",
+    "width": 1365,
+    "height": 763,
+    "sourceFile": "codex-clipboard-6dd33e58-4c14-4c7e-a89e-4487b59bcef4.png",
+    "use": "supplied scene artwork"
+  },
+  {
+    "name": "landing-plain",
+    "file": "landing-plain.png",
+    "width": 1364,
+    "height": 762,
+    "sourceFile": "codex-clipboard-41dfb4a5-ae1e-4756-b916-a47d1f50096f.png",
+    "use": "supplied scene artwork"
+  },
+  {
+    "name": "landing-canyon",
+    "file": "landing-canyon.png",
+    "width": 1364,
+    "height": 762,
+    "sourceFile": "codex-clipboard-e6a0a039-316a-46c7-97e7-d38a2d05ad3f.png",
+    "use": "supplied scene artwork"
+  },
+  {
+    "name": "landing-descent",
+    "file": "landing-descent.png",
+    "width": 1364,
+    "height": 762,
+    "sourceFile": "codex-clipboard-0f5eae8a-4a78-496d-9f8f-a89e163c0a6a.png",
+    "use": "supplied scene artwork"
+  },
+  {
+    "name": "outpost-panorama",
+    "file": "outpost-panorama.png",
+    "width": 1365,
+    "height": 763,
+    "sourceFile": "codex-clipboard-702beaac-5524-40bd-aa98-da2929461c77.png",
+    "use": "supplied scene artwork"
+  },
+  {
+    "name": "outpost-sunrise",
+    "file": "outpost-sunrise.png",
+    "width": 1335,
+    "height": 746,
+    "sourceFile": "codex-clipboard-a80322d6-86b2-4a6c-b8dd-90dd7457f17f.png",
+    "use": "supplied scene artwork"
+  },
+  {
+    "name": "outpost-storm",
+    "file": "outpost-storm.png",
+    "width": 1365,
+    "height": 763,
+    "sourceFile": "codex-clipboard-2dc8bd75-07ea-4bdb-b74f-628e17de73fc.png",
+    "use": "supplied scene artwork"
+  },
+  {
+    "name": "icebound-canyon",
+    "file": "icebound-canyon.png",
+    "width": 1365,
+    "height": 763,
+    "sourceFile": "codex-clipboard-2e23a58f-7fac-4619-b956-918f4e12d16d.png",
+    "use": "supplied scene artwork"
+  },
+  {
+    "name": "reference-menu",
+    "file": "reference-menu.png",
+    "width": 1365,
+    "height": 763,
+    "sourceFile": "codex-clipboard-54e5c0dd-f55e-4724-81f3-473e0da945f5.png",
+    "use": "reference only; baked UI is not interactive"
+  },
+  {
+    "name": "reference-map",
+    "file": "reference-map.png",
+    "width": 1330,
+    "height": 746,
+    "sourceFile": "codex-clipboard-cf26f2e4-d575-4fc3-964a-5e24c554a696.png",
+    "use": "reference only; baked UI is not interactive"
+  },
+  {
+    "name": "reference-dashboard",
+    "file": "reference-dashboard.png",
+    "width": 1364,
+    "height": 762,
+    "sourceFile": "codex-clipboard-34ba88ff-9843-4ca3-a84a-478d2cf0cd87.png",
+    "use": "reference only; baked UI is not interactive"
+  },
+  {
+    "name": "reference-dashboard-extra",
+    "file": "reference-dashboard-extra.png",
+    "width": 1330,
+    "height": 742,
+    "sourceFile": "codex-clipboard-52dd7dec-e8d4-4a10-8152-3d9f0c6d1e3d.png",
+    "use": "reference only; baked UI is not interactive"
+  }
+]
