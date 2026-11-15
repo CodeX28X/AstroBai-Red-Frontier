@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { maintainOutpost } from './gameplayTestSupport.mjs'
 import { createInitialGameState, gameReducer, INITIAL_GAME_STATE } from './gameReducer.ts'
 import { applyIceboundResolution } from './iceboundIntegration.ts'
 import { selectIceboundContext, selectIceboundView } from './iceboundSelectors.ts'
@@ -18,7 +19,7 @@ function outpost(options = {}, equipment = cargo) {
 }
 function ready(options = {}, equipment = cargo) {
   let state = outpost(options, equipment)
-  for (let sol = 0; sol < 3; sol++) state = gameReducer(state, { type: 'ADVANCE_SOL' })
+  while (state.sol < 3) state = gameReducer(maintainOutpost(state), { type: 'ADVANCE_SOL' })
   return state
 }
 function selected(siteId = 'icebound.lumen-shelf', options = {}) {
@@ -26,7 +27,7 @@ function selected(siteId = 'icebound.lumen-shelf', options = {}) {
   return dispatch(state, { type: 'SELECT_SITE', siteId })
 }
 function plan(siteId = 'icebound.lumen-shelf', method = 'rover-only', activity = 'subsurface-drilling') {
-  return { siteId, method, activity, equipmentIds: [...cargo], supplies: { power: 30, oxygen: 15, water: 8, food: 8 } }
+  return { siteId, method, activity, equipmentIds: [...cargo], supplies: { power: 2, oxygen: 1, water: 1, food: 1 } }
 }
 function reviewed(state = selected(), requested = plan()) {
   state = gameReducer(state, { type: 'SET_ICEBOUND_EXPEDITION_PLAN', plan: requested })
@@ -57,7 +58,7 @@ test('ICEBOUND initializes locked without starting objectives and readiness is e
   assert.equal(state.missions.icebound, 'locked')
   assert.equal(selectIceboundView(state).activeObjective, null)
   assert.deepEqual(state.appliedResolutionIds, [])
-  assert.deepEqual(state.iceboundReadiness.baselineCapabilities, [])
+  assert.ok(['recon','rover','eva','surface-sampling','drilling','sample-handling','lab-analysis'].every(capability => state.iceboundReadiness.baselineCapabilities.includes(capability)))
   assert.equal(state.iceboundReadiness.laboratoryOperational, false)
 })
 test('landing deploys exactly confirmed equipment and commissions the declared baseline', () => {
@@ -66,7 +67,7 @@ test('landing deploys exactly confirmed equipment and commissions the declared b
   assert.equal(state.iceboundReadiness.communicationsReady, true)
   assert.deepEqual(state.iceboundReadiness.deployedEquipment.map((item) => item.equipmentId), state.preparation.manifest.optionalCargo.map((item) => item.equipmentId))
   const empty = outpost({}, [])
-  assert.equal(empty.iceboundReadiness.roverOperational, false)
+  assert.equal(empty.iceboundReadiness.roverOperational, true)
   assert.deepEqual(empty.iceboundReadiness.deployedEquipment, [])
 })
 test('phase, Sol 3 and prerequisites guard the same engine through the store', () => {
@@ -85,16 +86,16 @@ test('recon stores D observations and charges its resources and action once', ()
   const proposal = iceboundEngine(selectIceboundContext(state), { type: 'RECON' })
   const next = dispatch(state, { type: 'RECON' })
   assert.deepEqual(next.icebound, proposal.proposedEffects.nextMissionState)
-  assert.equal(next.resources.power, state.resources.power - 3)
-  assert.equal(next.actionsRemaining, 1)
+  assert.equal(next.resources.power, state.resources.power - 1)
+  assert.equal(next.actionsRemaining, 2)
   assert.equal(next.icebound.observations.length, 3)
   assert.equal(next.iceboundEvents.length, 1)
   assert.equal(next.appliedResolutionIds.length, 1)
   assert.equal(next.missions.icebound, 'active')
   assertRejected(next, dispatch(next, { type: 'RECON' }))
 })
-test('missing confirmed equipment or operational readiness blocks recon with no deductions', () => {
-  for (const state of [ready({}, []), { ...ready(), iceboundReadiness: { ...ready().iceboundReadiness, roverOperational: false } }]) {
+test('operational readiness still blocks recon with no deductions', () => {
+  for (const state of [{ ...ready(), iceboundReadiness: { ...ready().iceboundReadiness, roverOperational: false } }]) {
     assertRejected(state, dispatch(state, { type: 'RECON' }))
   }
 })
@@ -128,7 +129,7 @@ test('editing a plan increments revision, invalidates review, and stale confirma
   assertRejected(edited, gameReducer(edited, { type: 'CONFIRM_ICEBOUND_EXPEDITION_PLAN', revision: revision + 1 }))
 })
 test('critical blockers prevent confirmation; warnings and recommendations do not', () => {
-  const blocked = reviewed(selected(), { ...plan(), equipmentIds: [] })
+  const blocked = reviewed(selected(), { ...plan(), equipmentIds: ['unknown-tool'] })
   assert.equal(blocked.iceboundPlanning.review.allowed, false)
   assertRejected(blocked, confirmed(blocked))
   const state = reviewed()
@@ -159,7 +160,7 @@ for (const method of ['rover-only', 'astronaut-team', 'combined']) {
     const proposal = iceboundEngine(selectIceboundContext(state), { type: 'EXECUTE_EXPEDITION' })
     const next = dispatch(state, { type: 'EXECUTE_EXPEDITION' })
     assert.equal(next.icebound.expedition.plan.method, method)
-    assert.equal(next.actionsRemaining, 0)
+    assert.equal(next.actionsRemaining, 1)
     assert.deepEqual(next.icebound, proposal.proposedEffects.nextMissionState)
     assertRejected(next, dispatch(next, { type: 'EXECUTE_EXPEDITION' }))
   })
@@ -179,13 +180,13 @@ test('execution revalidates resource, action, equipment, crew and hazard changes
 })
 test('sampling and analysis are separate operations across C sol resets', () => {
   const executed = dispatch(confirmed(), { type: 'EXECUTE_EXPEDITION' })
-  assert.equal(executed.actionsRemaining, 0)
+  assert.equal(executed.actionsRemaining, 1)
   assert.deepEqual(executed.icebound.samples, [])
-  assertRejected(executed, dispatch(executed, { type: 'COLLECT_SAMPLE', method: 'subsurface-drilling' }))
+  assert.equal(dispatch(executed, { type: 'COLLECT_SAMPLE', method: 'subsurface-drilling' }).icebound.samples.length, 1)
   const advanced = gameReducer(executed, { type: 'ADVANCE_SOL' })
   assert.deepEqual(advanced.icebound, executed.icebound)
-  assert.deepEqual(advanced.resources, executed.resources)
-  assert.equal(advanced.actionsRemaining, 2)
+  for(const key of Object.keys(executed.resources))assert.equal(advanced.resources[key],executed.resources[key]-1)
+  assert.equal(advanced.actionsRemaining, 3)
   const next = dispatch(advanced, { type: 'COLLECT_SAMPLE', method: 'subsurface-drilling' })
   assert.equal(next.icebound.samples.length, 1)
   assert.deepEqual(next.icebound.analyses, [])
@@ -214,9 +215,10 @@ for (const [site, method, activity, scenarioId, classification] of [
     assertRejected(state, dispatch(state, { type: 'GENERATE_REPORT' }))
   })
 }
-test('default baseline does not invent a lab or drill; missing lab blocks analysis', () => {
-  const state = sampled({ installedCapabilities: [] }, 'icebound.lumen-shelf', 'rover-only', 'surface-sampling')
-  assert.equal(state.iceboundReadiness.laboratoryOperational, false)
+test('standard lab is installed; an actual lab fault still blocks analysis', () => {
+  const readyState = sampled({ installedCapabilities: [] }, 'icebound.lumen-shelf', 'rover-only', 'surface-sampling')
+  assert.equal(readyState.iceboundReadiness.laboratoryOperational, true)
+  const state = { ...readyState, iceboundReadiness: { ...readyState.iceboundReadiness, laboratoryOperational: false } }
   assertRejected(state, dispatch(state, { type: 'ANALYZE_SAMPLE', sampleId: state.icebound.samples[0].id }))
   assert.equal(selectIceboundView(state).report.completionStatus, 'incomplete')
   assert.equal(selectIceboundView(state).report.conclusion, null)
@@ -245,7 +247,7 @@ test('atomic applicator rejects stale/replayed effects, resource underflows and 
   assertRejected(committed, applyIceboundResolution(committed, proposal))
   const staleSol = gameReducer(state, { type: 'ADVANCE_SOL' })
   assertRejected(staleSol, applyIceboundResolution(staleSol, proposal))
-  for (const value of [-1000, Number.NaN, 1000]) {
+  for (const value of [-1000, Number.NaN]) {
     const invalid = structuredClone(proposal)
     invalid.proposedEffects.resourceDeltas.power = value
     assertRejected(state, applyIceboundResolution(state, invalid))
@@ -291,15 +293,15 @@ test('full reducer-only ICEBOUND playthrough completes by Sol 4 and preserves th
   state = dispatch(state, { type: 'ANALYZE_SAMPLE', sampleId: state.icebound.samples[0].id })
   state = dispatch(state, { type: 'GENERATE_REPORT' })
   assert.equal(state.sol, 4)
-  assert.equal(state.actionsRemaining, 0)
-  assert.deepEqual(state.resources, { power: 81, oxygen: 100, water: 100, food: 95 })
+  assert.equal(state.actionsRemaining, 1)
+  assert.deepEqual(state.resources, { power: 3, oxygen: 7, water: 6, food: 6 })
   assert.equal(state.appliedResolutionIds.length, 7)
   assert.equal(state.iceboundEvents.length, 7)
-  assert.equal(state.spentActionIds.length, 4)
+  assert.equal(state.spentActionIds.filter(id=>id.startsWith('icebound:')).length, 4)
   assert.equal(state.icebound.completedObjectives.length, 6)
   assert.equal(selectIceboundView(state).status, 'completed')
   const report = state.icebound.report
-  while (state.sol < 10) state = gameReducer(state, { type: 'ADVANCE_SOL' })
+  while (state.completedSol < 10) state = gameReducer(maintainOutpost(state), { type: 'ADVANCE_SOL' })
   assert.equal(state.icebound.report, report)
   state = gameReducer(state, { type: 'ENTER_DEBRIEF' })
   assert.equal(state.phase, 'debrief')

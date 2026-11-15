@@ -66,6 +66,9 @@ export interface GameFeedback {
 }
 
 export interface GameState {
+  resourceRevision: number
+  consumedSols: number[]
+  guidance: { inspections: string[]; completedDialogueIds: string[] }
   phase: GamePhase
   sol: number
   completedSol: number
@@ -90,9 +93,15 @@ export interface GameState {
 }
 
 export type GameAction =
+  | { type: 'SET_RANDOMIZED_SUPPLIES'; supplies: import('../../features/missions/types/preparation.ts').SupplySelection }
+  | { type: 'OPERATE_FACILITY'; operationId: import('../../features/simulation/outpostSystems.ts').FacilityOperationId; expectedSol: number; expectedResourceRevision: number }
+  | { type: 'SET_SUPPLY_QUANTITY'; supplyId: import('../../features/missions/types/preparation.ts').SupplyId; quantity: number }
+  | { type: 'SET_SCIENCE_KIT'; packed: boolean }
+  | { type: 'INSPECT_LOCATION'; locationId: 'habitat' | 'solar-array' | 'greenhouse' | 'research-lab' | 'energy' | 'supplies' | 'safety' }
+  | { type: 'ACKNOWLEDGE_DIALOGUE'; dialogueId: string }
   | IceboundStoreAction
   | { type: 'START_GAME' }
-  | { type: 'ADVANCE_SOL' }
+  | { type: 'ADVANCE_SOL'; expectedSol?: number }
   | { type: 'RESET_GAME' }
   | { type: 'SET_EQUIPMENT_QUANTITY'; equipmentId: string; quantity: number }
   | { type: 'REVIEW_MANIFEST' }

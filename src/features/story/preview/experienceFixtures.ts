@@ -34,8 +34,8 @@ export function experienceFixture(index: number, page?: ExperienceView['page']):
   const budget = index === 4 ? 70 : 100
   return {
     page:page ?? (index < 3 ? 'prologue' : 'outpost'),scene,sol,chapter:scene.chapter,
-    tutorial:index===3?{target:'indicator',instruction:'Tap a light, pick a Quick Plan, then press Advance Sol.'}:undefined,
-    jobs:[{label:'Big job',available:true},{label:'Helper job',available:true}],hasSave:false,
+    tutorial:index===3?{target:'indicator',instruction:'Tap a light, pick a Quick Plan, then press Advance Mars Day.'}:undefined,
+    jobs:[{label:'Action 1',available:true},{label:'Action 2',available:true},{label:'Action 3',available:true}],hasSave:false,
     tokens:{sol,repairCost:15,lsRepairCost:10,method:'Rover',evidence:4,result:'INCONCLUSIVE',oxygen:100,water:100,food:55,battery:60,protection:75,health:100},
     indicators:[
       {id:'power',label:'Power',symbol:'ϟ',level:budget===70?'watch':'good',explanation:budget===70?'Watch out! Energy is getting tight. Check the Power Plan.':'Good! We have enough energy to run the base.',values:[{label:'Battery',value:'60'},{label:'Generation',value:String(budget)},{label:'Array',value:budget===70?'Damaged':'Working'}]},
@@ -44,7 +44,7 @@ export function experienceFixture(index: number, page?: ExperienceView['page']):
     ],
     map:{facilityStatuses:{habitat:'operational','solar-array':budget===70?'damaged':'operational',greenhouse:'operational','research-lab':'operational'},sites:explorationDemo,environment:{dustStorm:index===8,solarStormWarning:index===8,crewSheltering:false}},
     choices:scene.choices.map(choice => ({id:choice.id,available:true,cost:choice.id==='grid_repair'?'Big job · Battery -15':choice.id==='ls_repair'?'Big job · Battery -10':undefined})),
-    advance:{allowed:true,unusedJobs:2},power:fixturePower(budget),
+    advance:{allowed:true,unusedJobs:3},power:fixturePower(budget),
     readiness:[{id:'C1',passed:true,reason:'Everyone is healthy and has air, water and food.'},{id:'C2',passed:true,reason:'Oxygen, water and food are at safe levels.'},{id:'C3',passed:true,reason:'The battery has enough energy for launch.'},{id:'C4',passed:true,reason:'The crew is well protected.'},{id:'C5',passed:true,reason:'Solar array and life support are working.'},{id:'C6',passed:true,reason:'The lab produced a result. All results count.'}],
     evidence:[{label:'Recon',points:1},{label:'Method',points:1},{label:'Landing',points:1},{label:'Drill kit',points:0},{label:'Lab power',points:1},{label:'Re-run',points:0}],scienceResult:'inconclusive',outcome:'SUCCESS',stars:3,
     badges:['Power Starter','Ice Detective','Storm Guardian','Discovery Maker','Mars Explorer'],

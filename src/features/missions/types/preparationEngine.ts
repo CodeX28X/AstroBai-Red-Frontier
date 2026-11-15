@@ -1,10 +1,11 @@
 ﻿import type { MissionReview } from '../engine/preparation/reviewMissionPlan.ts'
-import type { MissionManifest } from './preparation.ts'
+import type { MissionManifest, SupplyId, SupplySelection } from './preparation.ts'
 
 export type PreparationStatus = 'editing' | 'reviewed' | 'confirmed'
 
 export interface PreparationState {
   manifest: MissionManifest
+  supplies: SupplySelection | null
   /** Abstract cargo capacity supplied by mission design, not a physical measurement. */
   cargoCapacityUnits: number
   status: PreparationStatus
@@ -15,6 +16,9 @@ export interface PreparationState {
 }
 
 export type PreparationIntent =
+  | { type: 'SET_RANDOMIZED_SUPPLIES'; supplies: SupplySelection }
+  | { type: 'SET_SUPPLY_QUANTITY'; supplyId: SupplyId; quantity: number }
+  | { type: 'SET_SCIENCE_KIT'; packed: boolean }
   | { type: 'SET_EQUIPMENT_QUANTITY'; equipmentId: string; quantity: number }
   | { type: 'REVIEW_MANIFEST' }
   | { type: 'CONFIRM_MANIFEST' }
@@ -28,6 +32,7 @@ export type PreparationIssueCode =
   | 'STALE_REVIEW'
   | 'MANIFEST_BLOCKED'
   | 'DUPLICATE_CONFIRMATION'
+  | 'CAPACITY_EXCEEDED'
 
 export interface PreparationIssue {
   code: PreparationIssueCode

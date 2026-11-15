@@ -1,0 +1,7 @@
+npm run build: PASS
+npm run lint: PASS (no warnings)
+npm test: PASS (270 passed, 0 failed)
+npm run test:browser: PASS (installed Chrome/Playwright, all four viewports)
+git diff --check: PASS
+
+No dependency or Vite configuration change. No commit, push, merge or reset.

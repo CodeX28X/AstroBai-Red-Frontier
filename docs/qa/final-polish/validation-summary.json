@@ -1,0 +1,19 @@
+{
+  "date": "2026-11-15",
+  "baseline": "92079fffb9fdbf49cdec160afd2a2c81d4d3090e",
+  "build": "passed (TypeScript and Vite)",
+  "lint": "passed",
+  "tests": {
+    "total": 288,
+    "passed": 288,
+    "failed": 0,
+    "skipped": 0
+  },
+  "literalPublicAssetReferences": 48,
+  "missingLiteralAssets": [],
+  "productionDependenciesAdded": 0,
+  "productionViteConfigurationChanged": false,
+  "whitespace": "passed",
+  "conflictMarkers": "none",
+  "testPublicAssetCopies": "disabled for server-rendered component bundles only"
+}

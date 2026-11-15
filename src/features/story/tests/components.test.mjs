@@ -20,6 +20,22 @@ after(() => {
   rmSync(scratch, { recursive: true, force: true });
 });
 const entries = [
+  ['SampleIllustration', 'components/SampleIllustration.tsx'],
+  ['WeatherResults', 'components/WeatherResults.tsx'],
+  ['AdventureSites', 'components/AdventureMission.tsx'],
+  ['CharacterDialogue', 'components/CharacterDialogue.tsx'],
+  ['AdventurePreparation', 'components/AdventurePreparation.tsx'],
+  ['CHARACTERS', 'data/characters.ts'],
+  ['createInitialGameState', '../../shared/store/gameReducer.ts'],
+  ['gameReducer', '../../shared/store/gameReducer.ts'],
+  ['ResourceHud', 'components/ResourceHud.tsx'],
+  ['MissionEnding', 'components/MissionEnding.tsx'],
+  ['HudObjective', 'components/HudObjective.tsx'],
+  ['PixelImage', '../../shared/components/PixelImage.tsx'],
+  ['ExpeditionEquipment', 'components/ExpeditionEquipment.tsx'],
+  ['FacilityProduction', 'components/FacilityProduction.tsx'],
+  ['selectIceboundContext', '../../shared/store/iceboundSelectors.ts'],
+  ['CAMPAIGN_OPTIONS', '../../shared/store/campaign.ts'],
   ['MainMenu', 'components/MainMenu.tsx'],
   ['SceneFrame', 'components/SceneFrame.tsx'],
   ['OutpostSlot', 'components/OutpostSlot.tsx'],
@@ -36,7 +52,7 @@ writeFileSync(join(scratch, 'entry.ts'), entries.map(([name, file]) =>
   'export { ' + name + ' } from ' + JSON.stringify(join(root, file).replaceAll('\\', '/')) + ';'
 ).join('\n'));
 await build({
-  configFile: false, root: projectRoot, logLevel: 'silent',
+  configFile: false, root: projectRoot, logLevel: 'silent', publicDir: false,
   build: {
     outDir: scratch, emptyOutDir: false, minify: false,
     lib: { entry: join(scratch, 'entry.ts'), formats: ['cjs'], fileName: () => 'components.cjs' },
@@ -44,8 +60,88 @@ await build({
   },
 });
 const require = createRequire(import.meta.url);
-const { MainMenu, SceneFrame, OutpostSlot, DeveloperAExperience, FacilityInspection, PowerPlanPanel, experienceFixture, previewPresets, presetValidation, feedbackCopy, formatCopy } = require(join(scratch, 'components.cjs'));
+const { MainMenu, SceneFrame, OutpostSlot, DeveloperAExperience, FacilityInspection, PowerPlanPanel, experienceFixture, previewPresets, presetValidation, feedbackCopy, formatCopy, CharacterDialogue, AdventurePreparation, CHARACTERS, createInitialGameState, gameReducer, ResourceHud, CAMPAIGN_OPTIONS, ExpeditionEquipment, FacilityProduction, selectIceboundContext, MissionEnding, HudObjective, PixelImage, SampleIllustration, WeatherResults, AdventureSites } = require(join(scratch, 'components.cjs'));
 const render = (component, props) => renderToStaticMarkup(React.createElement(component, props));
+test('spoken dialogue has the correct replaceable portrait, name and continue control', () => {
+  for (const [speakerId, speaker] of Object.entries(CHARACTERS)) {
+    const guide = { id: `portrait.${speakerId}`, speakerId, speakerName: speaker.name, text: 'Let us check together.', objectiveId: 'presentation', title: 'Hello', actionLabel: 'Explore' };
+    const html = render(CharacterDialogue, { guide, completed: false, onComplete() {}, actionRef: { current: null } });
+    assert.ok(html.includes(speaker.portrait));assert.ok(html.includes(`${speaker.name} portrait`));assert.match(html,/Tap to continue/);assert.match(html,/type="button"/);
+  }
+});
+
+test('a completed multi-speaker dialogue keeps its last speaker and matching line', () => {
+  const guide={id:'outpost.sol1.habitat',speakerId:'bai',speakerName:'BAI',text:'Original BAI line',objectiveId:'outpost.explore',title:'Welcome',actionLabel:'Explore'};
+  const html=render(CharacterDialogue,{guide,completed:true,onComplete(){},actionRef:{current:null}});
+  assert.match(html,/captain-kiki\/portrait.png/);assert.match(html,/Our crew is ready, Commander/);assert.doesNotMatch(html,/Original BAI line/);
+});
+test('new preparation renders exactly four supply cards at zero and an opt-in science kit', () => {
+  const html = render(AdventurePreparation, { state: createInitialGameState(CAMPAIGN_OPTIONS), dispatch() {} });
+  assert.equal((html.match(/data-supply=/g) ?? []).length,4);
+  for (const name of ['Energy Pack','Oxygen Tank','Water Container','Food Pack']) assert.ok(html.includes(`${name} quantity`));
+  assert.equal((html.match(/quantity">0\/10<\/output>/g) ?? []).length,4);
+  assert.match(html,/ICEBOUND science kit/);assert.doesNotMatch(html,/checked=""/);
+});
+
+test('entering preparation displays four 5/10 counters and 20/35 cargo', () => {
+  const state = gameReducer(createInitialGameState(CAMPAIGN_OPTIONS), { type: 'START_GAME' });
+  const html = render(AdventurePreparation, { state, dispatch() {} });
+  assert.equal((html.match(/quantity">5\/10<\/output>/g) ?? []).length, 4);
+  assert.match(html, /20 \/ 35/);
+});
+
+test('HUD numbers and native progress bars follow each authoritative resource update', () => {
+  const state = gameReducer(createInitialGameState(), { type: 'START_GAME' });
+  for (const resources of [{power:7,oxygen:2,water:0,food:10}, {power:6,oxygen:3,water:1,food:9}]) {
+    const html = render(ResourceHud, { resources, onInspect() {} });
+    for (const [key, name] of Object.entries({power:'Energy',oxygen:'Oxygen',water:'Water',food:'Food'})) {
+      assert.ok(html.includes(`<strong>${resources[key]}/10</strong>`));
+      assert.ok(html.includes(`aria-label="${name} reserve" max="10" value="${resources[key]}"`));
+    }
+    assert.equal((html.match(/<progress/g) ?? []).length,4);
+    for(const resource of ['energy','oxygen','water','food'])assert.ok(html.includes(`/assets/resources/${resource}.png`));
+  }
+  assert.deepEqual(state.resources, {power:0,oxygen:0,water:0,food:0});
+});
+
+test('ending shows authoritative outcome, completed sols, resources and honest science classification', () => {
+  const base={...createInitialGameState(),phase:'debrief',completedSol:4,resources:{power:0,oxygen:2,water:1,food:1}};
+  const failed=render(MissionEnding,{state:{...base,outcome:'failure'},onPlayAgain(){},onReport(){},onMenu(){}});
+  assert.match(failed,/Mission Paused!/);assert.doesNotMatch(failed,/Mission Complete!/);assert.match(failed,/4 \/ 10/);assert.match(failed,/0\/10/);assert.match(failed,/\/assets\/characters\/bai\/portrait.png/);
+  assert.match(failed,/View Mission Report/);assert.match(failed,/Play Again/);assert.doesNotMatch(failed,/Our science notebook/);
+  for(const conclusion of ['no-accessible-ice-detected','inconclusive']){
+    const state={...base,outcome:'success',completedSol:10,icebound:{...base.icebound,investigations:[{siteId:'icebound.lumen-shelf',report:{conclusion}}]}};
+    const html=render(MissionEnding,{state,onPlayAgain(){},onReport(){},onMenu(){}});
+    assert.match(html,/Mission Complete!/);assert.match(html,/1 site reported/);assert.match(html,conclusion==='inconclusive'?/Not Sure Yet/:/No Ice Found Here/);assert.doesNotMatch(html,/failed investigation/i);
+  }
+});
+
+test('minimized HUD retains objective access and actual low-resource warnings', () => {
+  const state={...createInitialGameState(),resources:{power:1,oxygen:5,water:2,food:4},actionsRemaining:1};
+  const html=render(HudObjective,{state,objective:'Collect a careful sample',minimized:true,onMission(){},onResource(){}});
+  assert.match(html,/Current objective: Collect a careful sample/);assert.match(html,/Low Energy 1\/10 · Water 2\/10/);assert.match(html,/role="status"/);
+  assert.doesNotMatch(render(HudObjective,{state:{...state,resources:{power:5,oxygen:5,water:5,food:5}},objective:'Explore',minimized:false,onMission(){},onResource(){}}),/Low Energy/);
+});
+
+test('missing equipment art renders a readable, nonbroken placeholder', () => {
+  const html=render(PixelImage,{alt:'Repair Toolkit illustration',fallbackText:'⚒',width:36,height:36});
+  assert.match(html,/role="img"/);assert.match(html,/Repair Toolkit illustration/);assert.doesNotMatch(html,/<img/);
+});
+
+test('equipment UI lists standard tools and only genuinely packed optional choices', () => {
+  let state=gameReducer(createInitialGameState(),{type:'START_GAME'});
+  function land(){for(const type of ['REVIEW_MANIFEST','CONFIRM_MANIFEST','BEGIN_LAUNCH','COMPLETE_LAUNCH'])state=gameReducer(state,{type});state=gameReducer(state,{type:'SELECT_LANDING_SITE',siteId:'landing-safe-zone'});}
+  land();
+  const plan={siteId:'icebound.lumen-shelf',method:'rover-only',activity:'subsurface-drilling',equipmentIds:[],supplies:{power:2}};
+  let html=render(ExpeditionEquipment,{context:selectIceboundContext(state),plan,onChange(){}});
+  assert.match(html,/Standard mission rover/);assert.match(html,/Drilling station/);assert.match(html,/No optional tools were packed/);assert.doesNotMatch(html,/type="checkbox"/);
+  state=gameReducer(createInitialGameState(),{type:'START_GAME'});state=gameReducer(state,{type:'SET_SCIENCE_KIT',packed:true});land();
+  html=render(ExpeditionEquipment,{context:selectIceboundContext(state),plan:{...plan,equipmentIds:['soil-analysis-kit']},onChange(){}});
+  assert.equal((html.match(/type="checkbox"/g)??[]).length,5);assert.match(html,/Soil Analysis Kit/);assert.equal((html.match(/checked=""/g)??[]).length,1);
+  const produced=gameReducer(state,{type:'OPERATE_FACILITY',operationId:'collect-energy',expectedSol:state.sol,expectedResourceRevision:state.resourceRevision});
+  html=render(FacilityProduction,{building:'solar-array',state:produced,dispatch(){}});
+  assert.match(html,/production-succeeded/);assert.match(html,/One Action used/);assert.match(html,/aria-disabled="true"/);
+});
 
 test('menu Continue is unavailable without a save and emits only a supplied command', () => {
   let command = null;
@@ -127,4 +223,12 @@ test('science-site inspection never offers a facility interior', () => {
 });
 test('empty selection renders no inspection card', () => {
  assert.equal(render(FacilityInspection,{facilityId:null,onClose(){},onEnter(){}}),'');
+});
+
+test('method illustrations and research site images use semantic metadata and supplied slots',()=>{
+  for(const [method,file,label] of [['surface-sampling','surface-sample.png','Surface sample'],['subsurface-drilling','drilled-sample.png','Subsurface drilled sample']]){const html=render(SampleIllustration,{method});assert.ok(html.includes(file));assert.ok(html.includes(label));assert.match(html,/appearance alone does not prove ice/)}
+  const html=render(AdventureSites,{state:gameReducer(createInitialGameState(),{type:'START_GAME'}),dispatch(){},onChosen(){}});for(const name of ['lumen-shelf','cinder-flats','echo-ridge'])assert.ok(html.includes('/assets/exploration/sites/'+name+'.png'));assert.match(html,/Route safety/)
+});
+test('weather briefing labels simulated and unavailable data and retains secondary NASA references',()=>{
+  const html=render(WeatherResults,{readiness:{weather:'caution',radiation:'blocked'}});assert.match(html,/Game scenario/);assert.match(html,/Live Mars observations unavailable/);assert.match(html,/NASA references/);assert.match(html,/science.nasa.gov/);assert.match(render(WeatherResults,{}),/Unavailable/)
 });

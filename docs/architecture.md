@@ -1,16 +1,38 @@
 ﻿# Architecture
 
-## Current foundation
+## Current playable integration
+
+The final production polish keeps `GameProvider` and the reducer as the sole gameplay writers. The shared `getActionBlocker` runs a read-only preview of that same pure reducer before a confirmation; actual dispatch revalidates. Existing native dialogs add cancellation, keyboard focus trapping/restoration and a synchronous duplicate-confirm guard. Pending movement explicitly shows work-on-arrival and can be cancelled without a paid command. Changing destinations clears the pending task.
+
+One story-owned `VoiceProvider` centralizes automatic visible-caption narration and synthesized effects. Gesture unlock, saved independent preferences, asynchronous voice loading, caption ownership, cancellation and session deduplication are presentation concerns. The legacy preview sound hook uses the same effects factory. Shared `PixelImage` resolves public asset URLs through `BASE_URL`, with distinct per-site and method-specific fallbacks. D's existing sampling-quality calculation is exposed as a pure helper for honest planning guidance and unchanged classification. Reports render recorded evidence; NASA weather references explain scenario flags and unavailable live observations. See `final-polish-report.md` for current validation and compatibility limits.
+
+The child-friendly interaction pass adds atomic randomized preparation, three authoritative Actions per Mars Day, state-derived warning/recovery guidance, accessible blocked-action explanations, optional browser speech, contextual building cards and mission-log navigation. New-game introduction and HUD guide completion use existing dialogue acknowledgments. Visual setup and science review use supplied registered art with safe fallbacks. Existing simulation, costs, collision meshes, objective/science classification and save-history replay remain authoritative. See `child-friendly-report.md` for implementation and QA evidence.
+
+The pixel-art presentation pass adds shared `gameAssets` definitions, `PixelImage` failure handling, feature-owned character portraits, resource/equipment images, a compact `HudObjective` layer and a summary-first `MissionEnding`. These read existing state and dispatch existing callbacks; no new resource, outcome or mission engine exists. Navigation uses pad-aligned footprints, exact segment collision checks, common facility approaches, depth ordering and a configured 25% speed/cadence increase. Scout's stored position is retained when assigned as a companion. See `pixel-assets-report.md` for current visual evidence. Simulation/progression/scientific contracts below remain unchanged.
+
+The current gameplay fixes keep 0–10 resources, 35 cargo spaces and the default 5-each loadout. `features/simulation/outpostSystems.ts` owns pure production/consumption rules; the central reducer commits resources, one-job costs, per-sol operation locks, consumed-sol records and natural supply failure atomically. Standard capabilities and selectable operational optional cargo are listed separately. ICEBOUND retains per-site investigation records plus cumulative samples, analyses, costs and global progress; site-scoped markers prevent replay. The existing science classifier is unchanged. ResourceHud reads authoritative resources; compact/minimized HUD state is presentation-only. Save v4 replays current-rule histories and rejects older histories that lacked daily consumption. See `docs/gameplay-fixes-report.md`.
+
+`src/app/App.tsx` mounts `AdventureExperience`. Feature-owned preparation, map, interiors and mission panels read `GameProvider`; typed player intents go to the existing reducer and mission engines. The old A/B previews remain available for independent design review.
+
+- A: `adventureDirector` derives one objective/dialogue beat from real mission progress. The adventure components render contextual controls and existing story artwork.
+- B: `navigation.ts` provides grid A*, scene-coordinate conversion and elapsed-time movement. `NavigatingActor` keeps visual positions in refs and handles route cancellation, facing, formation and animation boundaries. `MarsMap` opens inspections on arrival; `FacilityInterior` uses a separate room collision mesh.
+- C: the reducer remains authoritative. `campaign.ts` explicitly configures fictional installed lab/drilling capabilities through the existing initialization interface. `saveGame.ts` validates and replays a bounded player-action history; saves cannot inject raw resource or readiness values.
+- D: existing preparation, progression and ICEBOUND engines retain eligibility, costs and scientific classifications. The final-sol boundary now distinguishes playing Sol 10 from completing it.
+- E: cached, typed NASA science summaries live in `src/data/nasa/scienceFacts.ts`, with source links and real/fictional labels. Core gameplay makes no network requests.
+
+Daily consumption and manual facility production are implemented. Power allocation, damage/repair events, solar-storm operations, separate crew health and partial-success thresholds remain absent. No passive generation is added. Earlier implementation reports are historical; `docs/integration-contract.md` records the current rules.
+
+## Foundation
 
 - `src/main.tsx` mounts the React application.
-- `src/app` contains the application shell and setup screen.
+- `src/app` contains the application entry point.
 - `src/features` groups feature-owned UI and domain code.
 - `src/shared` is reserved for reviewed contracts, shared state, reusable components, and utilities.
 - `src/data/nasa` holds source-backed NASA scenario data.
 - `src/styles` contains global styles.
 - `public/assets` groups static art and audio by asset type.
 
-The scaffold has no gameplay, mission-event, or resource-calculation code. Keep Vite and the existing package scripts as the build foundation.
+Keep Vite as the build foundation. Simulation and mission rules must remain separate from presentation and animation.
 
 ## Feature boundaries
 

@@ -1,0 +1,23 @@
+{
+  "results": [
+    "menu 1366×768: viewport fits",
+    "outpost 1366×768: viewport fits",
+    "Real frame-by-frame travel, arrival and idle verified",
+    "Rapid retargeting, resize during travel, modal pause/resume and keyboard focus containment verified",
+    "habitat 1366×768: viewport fits",
+    "Preparation → launch → visual travel → landing → all ICEBOUND operations through UI",
+    "Reload/resume preserves real mission action journal",
+    "outpost 1920×1080: viewport fits",
+    "outpost mobile 390×844: viewport fits",
+    "Bundled NASA facts and remaining campaign work with the network offline",
+    "debrief 1366×768: viewport fits",
+    "Completed Sol 10 and debrief with actual positive-supporting science",
+    "Restart/replay resets mission through reducer",
+    "Touch travel and arrival verified in a real mobile browser context",
+    "Cinder Flats: No Ice Found Here through UI, assigned companions separated, reduced motion respected",
+    "Echo Ridge: Not Sure Yet through UI, assigned companions separated, reduced motion respected",
+    "No-suit crew stays inside; optional unfinished ICEBOUND still permits ten-sol success",
+    "Corrupt save fails closed with a clear recovery message"
+  ],
+  "errors": []
+}

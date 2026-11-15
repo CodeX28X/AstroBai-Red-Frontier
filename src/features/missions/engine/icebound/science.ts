@@ -1,5 +1,14 @@
-import type { IceboundAnalysis, IceboundContext, IceboundSample, IceboundScienceReport } from '../../types/icebound.ts'
-import { scenarioFor } from './readiness.ts'
+import type { ExpeditionPlan, IceboundAnalysis, IceboundContext, IceboundSample, IceboundScienceReport } from '../../types/icebound.ts'
+import { capabilitiesFor, scenarioFor } from './readiness.ts'
+import { activeObjectives, currentSamples, currentAnalyses } from './siteProgress.ts'
+
+export function plannedSampleQuality(context: IceboundContext, plan: ExpeditionPlan): IceboundSample['quality'] {
+  return { handling: plan.equipmentIds.includes('sample-container-set') ? 'sealed' : 'basic', instrument: capabilitiesFor(context, [...plan.equipmentIds]).has('field-analysis') ? 'field' : 'basic', documented: context.mission.observations.some(item => item.siteId === plan.siteId) }
+}
+/** Same quality boundary used by classification and by the player's planning checklist. */
+export function evidenceQualityIssues(quality: IceboundSample['quality']): string[] {
+  return [quality.handling !== 'sealed' ? 'Sealed sample containers help protect the material.' : '', quality.instrument !== 'field' ? 'A Soil Analysis Kit records field-instrument context.' : '', !quality.documented ? 'A recorded survey is needed to document the sample location.' : ''].filter(Boolean)
+}
 
 /** Scenario truth and investigation quality are separate inputs. No equipment can create ice. */
 export function evaluateSampleAnalysis(context: IceboundContext, sample: IceboundSample): IceboundAnalysis {
@@ -14,7 +23,7 @@ export function evaluateSampleAnalysis(context: IceboundContext, sample: Iceboun
       conclusion: 'The investigation is incomplete; this is not evidence that ice is absent.', limitations: ['A usable sample and matching scenario record are required.'] }
   }
   const finding = sample.method === 'subsurface-drilling' ? conditions.subsurface : conditions.surface
-  const qualityReady = sample.quality.handling === 'sealed' && sample.quality.instrument === 'field' && sample.quality.documented
+  const qualityReady = evidenceQualityIssues(sample.quality).length === 0
   if (!qualityReady || finding === 'unknown') {
     return { ...base, classification: 'inconclusive', observed: 'The available evidence does not clearly distinguish ice from other material.',
       conclusion: 'We cannot tell yet. Recording uncertainty is a useful scientific result.', limitations: [
@@ -39,7 +48,7 @@ export function generateScienceReport(context: IceboundContext): IceboundScience
     mission.samples.some((sample) => sample.id === analysis.sampleId && sample.status === 'collected' &&
       sample.expeditionId === mission.expedition?.id && sample.siteId === mission.selectedSiteId && sample.scenarioId === mission.scenarioId))
   const complete = ['icebound.recon', 'icebound.site-selection', 'icebound.expedition-plan', 'icebound.sample-collection', 'icebound.lab-analysis']
-    .every((id) => mission.completedObjectives.some((completed) => completed === id)) && finding !== undefined && mission.expedition !== null
+    .every((id) => activeObjectives(mission).some((completed) => completed === id)) && finding !== undefined && mission.expedition !== null
   const conclusion = complete ? finding.classification : null
   const outcomeId = !complete ? 'icebound.outcome.incomplete' : conclusion === 'supports-accessible-ice' ? 'icebound.outcome.supported-ice' :
     conclusion === 'no-accessible-ice-detected' ? 'icebound.outcome.negative' : 'icebound.outcome.inconclusive'
@@ -47,9 +56,9 @@ export function generateScienceReport(context: IceboundContext): IceboundScience
     outcomeId, completionStatus: complete ? 'complete' : 'incomplete', siteId: mission.selectedSiteId,
     reconnaissance: mission.observations, expeditionMethod: mission.expedition?.plan.method ?? null,
     expeditionObservations: mission.expedition?.observations ?? [],
-    equipmentIds: mission.expedition?.plan.equipmentIds ?? [], samples: mission.samples, findings: mission.analyses,
+    equipmentIds: mission.expedition?.plan.equipmentIds ?? [], samples: currentSamples(mission), findings: currentAnalyses(mission),
     conclusion, limitations: complete ? finding.limitations : ['The investigation has not produced a completed analysis. Do not interpret missing work as a negative finding.'],
-    operationalCosts: mission.costs, scienceReferenceIds: ['nasa-swim', 'nasa-perseverance-objectives', 'nasa-mars-2020'],
+    operationalCosts: mission.costs.filter(cost=>cost.operationId==='recon'||cost.operationId.startsWith(`${mission.selectedSiteId}:`)), scienceReferenceIds: ['nasa-swim', 'nasa-perseverance-objectives', 'nasa-mars-2020'],
     feedbackIds: [complete ? 'icebound.report.complete' : 'icebound.report.incomplete'],
   })
 }

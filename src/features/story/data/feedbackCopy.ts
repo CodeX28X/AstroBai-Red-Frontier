@@ -17,11 +17,11 @@ export const feedbackCopy: Readonly<Record<string, FeedbackCopy>> = {
     "chosen": "Ice Drill Kit",
     "changed": "ICEBOUND evidence +1. Water -10.",
     "why": "Drill pipes are heavy, so some water stayed on Earth.",
-    "next": "Water must last 10 sols. Be careful with the greenhouse."
+    "next": "Water must last 10 Mars Days. Be careful with the greenhouse."
   },
   "fb_cruise_wait": {
     "chosen": "Wait for Earth",
-    "changed": "Water -5. Earth advice learned: the Sol 4 life-support repair costs 5 less battery.",
+    "changed": "Water -5. Earth advice learned: the Mars Day 4 life-support repair costs 5 less battery.",
     "why": "Earth took time to reply because of distance. The coolant ran while the crew waited.",
     "next": "Sometimes waiting is wise. Sometimes it costs time you do not have."
   },
@@ -68,7 +68,7 @@ export const feedbackCopy: Readonly<Record<string, FeedbackCopy>> = {
     "next": "Open the Power Plan and decide what to turn down. You can still repair it later."
   },
   "fb_grid_prevented": {
-    "chosen": "Reinforcing the array on Sol 1",
+    "chosen": "Reinforcing the array on Mars Day 1",
     "changed": "No damage. Power budget stays 100. Event resolved automatically.",
     "why": "Stronger hinges kept the array working when wind and dust hit.",
     "next": "Prevention used an action early. It saved one now."
@@ -77,7 +77,7 @@ export const feedbackCopy: Readonly<Record<string, FeedbackCopy>> = {
     "chosen": "Survey the site with Scout",
     "changed": "Recon complete. Evidence +1. Battery -5. 1 action used.",
     "why": "Scout used radar and cameras to look for a bright, smooth layer under the dust.",
-    "next": "Next, choose how to collect a sample. You will plan that on Sol 5."
+    "next": "Next, choose how to collect a sample. You will plan that on Mars Day 5."
   },
   "fb_ls_repair": {
     "chosen": "Repair the valve",
@@ -87,13 +87,13 @@ export const feedbackCopy: Readonly<Record<string, FeedbackCopy>> = {
   },
   "fb_ls_reroute": {
     "chosen": "Reroute resources",
-    "changed": "Efficiency 80%. Greenhouse offline for 2 sols. Water -5. 1 action used.",
+    "changed": "Efficiency 80%. Greenhouse offline for 2 Mars Days. Water -5. 1 action used.",
     "why": "Backup lines help the air machine but use water meant for the greenhouse.",
     "next": "Oxygen still drops a little. A full repair may still be needed."
   },
   "fb_ls_conserve": {
     "chosen": "Conserve",
-    "changed": "Oxygen use is 6 per sol for 3 sols. Max 1 action per sol for 3 sols. Valve still broken.",
+    "changed": "Oxygen use is 6 per Mars Day for 3 Mars Days. Max 1 action per Mars Day for 3 Mars Days. Valve still broken.",
     "why": "Moving slowly makes the crew breathe less air, but also gets less work done.",
     "next": "You have fewer actions for ICEBOUND. Is a repair worth an action?"
   },
@@ -179,7 +179,7 @@ export const feedbackCopy: Readonly<Record<string, FeedbackCopy>> = {
     "chosen": "Analyze the sample",
     "changed": "Result: INCONCLUSIVE. Evidence {evidence}. Not enough to be sure.",
     "why": "The sample shows some clues, but not enough for a clear answer.",
-    "next": "A second run on Sol 9 adds 1 evidence if the lab has full power."
+    "next": "A second run on Mars Day 9 adds 1 evidence if the lab has full power."
   },
   "fb_result_negative": {
     "chosen": "Analyze the sample",

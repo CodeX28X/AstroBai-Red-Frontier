@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "node --test \"src/shared/store/*.test.mjs\" \"src/features/missions/tests/*.test.mjs\" \"src/features/missions/tests/*.test.ts\"",
+    "test": "node --test --test-concurrency=1 \"src/shared/store/*.test.mjs\" \"src/features/missions/tests/*.test.mjs\" \"src/features/missions/tests/*.test.ts\" \"src/features/mars-map/tests/*.test.mjs\" \"src/features/story/tests/*.test.mjs\"",
+    "test:browser": "node scripts/final-polish-qa.mjs",
     "test:icebound": "node --test \"src/features/missions/tests/icebound*.test.mjs\"",
     "typecheck:icebound": "tsc --ignoreConfig --noEmit --strict --target es2023 --module esnext --moduleResolution bundler --allowImportingTsExtensions --skipLibCheck --types vite/client src/features/missions/engine/icebound/index.ts"
   },

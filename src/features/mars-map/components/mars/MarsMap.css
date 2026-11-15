@@ -23,3 +23,5 @@
 
 /* Base component rules must also work outside the demo App. */
 .map-section{font-family:ui-monospace,Consolas,monospace}.map-section .compact-facility-name{display:none}
+/* Preserve the original map coordinate plane, including independent feature previews. */
+.map-playfield{position:absolute;inset:0}

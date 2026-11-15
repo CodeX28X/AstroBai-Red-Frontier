@@ -11,7 +11,7 @@ interface FacilityProps {
 }
 
 export function Facility({ location, selected, status, sheltering = false, onSelect }: FacilityProps) {
-  const style = { '--x': `${location.position.x}%`, '--y': `${location.position.y}%`, '--facility-color': location.color } as CSSProperties;
+  const style = { '--x': `${location.position.x}%`, '--y': `${location.position.y}%`, '--facility-color': location.color, zIndex:100+Math.round(location.position.y) } as CSSProperties;
   return <button type="button" className={`mars-facility facility-${location.id} status-${status}${selected ? ' is-selected' : ''}${sheltering ? ' habitat-sheltering' : ''}`} style={style} onClick={onSelect} aria-pressed={selected} aria-label={`Inspect ${location.label}, ${status}${sheltering ? ', crew sheltering' : ''}`}>
     <span className="facility-selection" aria-hidden="true">{selected ? 'SELECTED' : 'INSPECT'}</span>
     <span className="facility-art"><FacilityArt id={location.id} /><span className="equipment-light" aria-hidden="true" />{status === 'damaged' && <span className="malfunction-plume" aria-hidden="true" />}</span>

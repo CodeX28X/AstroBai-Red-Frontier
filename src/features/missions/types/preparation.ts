@@ -10,6 +10,8 @@ export type EquipmentCategory =
   | 'food'
 
 export type EquipmentId = string
+export type SupplyId = 'power' | 'oxygen' | 'water' | 'food'
+export type SupplySelection = Record<SupplyId, number>
 
 export interface EquipmentDefinition {
   id: EquipmentId

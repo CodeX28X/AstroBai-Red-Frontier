@@ -4,6 +4,8 @@ import { EQUIPMENT_CATALOG, PREDEPLOYED_OUTPOST_BASELINE } from '../../data/equi
 import { ICEBOUND_BALANCE } from '../../data/iceboundMission.ts'
 import { ICEBOUND_SCENARIOS } from '../../data/iceboundScenarios.ts'
 import { validateManifest } from '../preparation/validateManifest.ts'
+import { reviewMissionPlan } from '../preparation/reviewMissionPlan.ts'
+import { MAX_RESOURCE_VALUE } from '../../../../shared/store/resourceEffects.ts'
 
 /** Capability adapter only, not another equipment catalog. No catalog item is a drill or lab. */
 export const ICEBOUND_EQUIPMENT_CAPABILITIES = {
@@ -42,15 +44,15 @@ export function baseIssues(context: IceboundContext): IceboundIssue[] {
   const balance = balanceFor(context)
   const issues: IceboundIssue[] = []
   if (game.phase !== 'outpost') issues.push(iceboundIssue('OUTPOST_REQUIRED', 'This investigation happens at the outpost.'))
-  if (game.outcome !== null) issues.push(iceboundIssue('MISSION_ENDED', 'The mission has ended. Keep the findings for debrief.'))
+  if (game.outcome !== null || game.completedSol >= game.actionLimits.maxSol) issues.push(iceboundIssue('MISSION_ENDED', 'The mission has ended. Keep the findings for debrief.'))
   if (!Number.isInteger(game.sol) || game.sol < balance.earliestSol || game.sol > balance.finalSol) {
-    issues.push(iceboundIssue('SOL_WINDOW', 'Begin ICEBOUND from Sol 3 and finish within the mission window.'))
+    issues.push(iceboundIssue('SOL_WINDOW', 'Begin ICEBOUND from Mars Day 3 and finish within the mission window.'))
   }
   const preparation = game.preparation
   if (preparation.status !== 'confirmed' || preparation.confirmedAtRevision !== preparation.revision ||
       preparation.reviewedRevision !== preparation.revision || !preparation.latestReview?.allowed ||
       preparation.manifest.missionId !== 'icebound' || preparation.manifest.baselineId !== PREDEPLOYED_OUTPOST_BASELINE.id ||
-      !validateManifest(preparation.manifest, preparation.cargoCapacityUnits).valid) {
+      !validateManifest(preparation.manifest, preparation.cargoCapacityUnits).valid || !reviewMissionPlan(preparation.manifest, preparation.cargoCapacityUnits, preparation.supplies).allowed) {
     issues.push(iceboundIssue('CONFIRMED_MANIFEST_REQUIRED', 'A valid confirmed equipment manifest is needed.'))
   }
   const costs = [balance.recon, ...Object.values(balance.expedition), ...Object.values(balance.sampling), balance.analysis]
@@ -65,7 +67,7 @@ export function baseIssues(context: IceboundContext): IceboundIssue[] {
     issues.push(iceboundIssue('INVALID_MISSION_STATE', 'The investigation record needs checking.'))
   }
   if (!Number.isInteger(game.actionsRemaining) || game.actionsRemaining < 0 ||
-      Object.values(game.resources).some((value) => !Number.isFinite(value) || value < 0)) {
+      Object.values(game.resources).some((value) => !Number.isFinite(value) || value < 0 || value > MAX_RESOURCE_VALUE)) {
     issues.push(iceboundIssue('INVALID_READINESS', 'Resource or action readiness is unavailable.'))
   }
   return issues
@@ -74,9 +76,9 @@ export function costIssues(context: IceboundContext, costs: Partial<Resources>, 
   const issues: IceboundIssue[] = []
   const codes = { power: 'INSUFFICIENT_POWER', oxygen: 'INSUFFICIENT_OXYGEN', water: 'INSUFFICIENT_WATER', food: 'INSUFFICIENT_FOOD' } as const
   for (const [resource, required] of Object.entries(costs) as [keyof Resources, number][]) {
-    if (context.game.resources[resource] < required) issues.push(iceboundIssue(codes[resource], `This operation needs ${required} game units of ${resource}.`))
+    if (context.game.resources[resource] < required) issues.push(iceboundIssue(codes[resource], `This job needs ${required} ${resource === 'power' ? 'energy' : resource}.`))
   }
-  if (context.game.actionsRemaining < slots) issues.push(iceboundIssue('INSUFFICIENT_ACTIONS', 'There are not enough action slots left this sol. Try next sol.'))
+  if (context.game.actionsRemaining < slots) issues.push(iceboundIssue('INSUFFICIENT_ACTIONS', 'Not enough Actions left today. Try the next Mars Day.'))
   return issues
 }
 export function fieldIssues(context: IceboundContext, crew: boolean): IceboundIssue[] {

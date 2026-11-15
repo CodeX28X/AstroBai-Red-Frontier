@@ -25,7 +25,14 @@ export function evaluateResearchSite(context: IceboundContext, siteId: string, m
 }
 
 export function listResearchSites(context: IceboundContext) {
-  return ICEBOUND_SITES.map((site) => evaluateResearchSite(context, site.id))
+  return ICEBOUND_SITES.map((site) => {
+    const assessment = evaluateResearchSite(context,site.id)
+    const completed = context.mission.investigations.some(investigation=>investigation.siteId===site.id && investigation.report)
+    const current = context.mission.selectedSiteId===site.id
+    const active = !!context.mission.selectedSiteId && !context.mission.report
+    const reason = completed ? 'This site already has a recorded report.' : active ? 'Finish the current investigation before choosing another site.' : assessment.issues[0]?.explanation
+    return {...assessment, completed, current, selectable:assessment.allowed && !completed && !active, selectionReason:reason}
+  })
 }
 
 /** Copies a request without changing quantities, adding tools or approving the plan. */

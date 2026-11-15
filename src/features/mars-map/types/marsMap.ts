@@ -28,6 +28,20 @@ export interface FacilityLocation {
 }
 
 export interface MarsMapProps {
+  readonly renderFacilityCard?: (id: FacilityId) => import('react').ReactNode;
+  readonly highlightedSiteId?: string;
+  readonly fullViewport?: boolean;
+  readonly navigation?: {
+    readonly evaAllowed: boolean;
+    readonly blockedReason?: string;
+    readonly roverAvailable: boolean;
+    readonly request?: import('../navigation/navigation').NavigationRequest;
+    readonly onArrive?: (id: number) => void;
+    readonly onBlocked?: (reason: string) => void;
+    readonly objectiveFacility?: FacilityId;
+    readonly highlightScout?: boolean;
+    readonly onScoutSelect?: () => void;
+  };
   // Presentation visibility only: a retained map pauses while an interior is open.
   readonly isActive?: boolean;
   // Supplied only after the shared mission system reports an outcome.

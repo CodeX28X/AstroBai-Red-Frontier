@@ -9,7 +9,7 @@ for (const method of ['rover-only', 'astronaut-team', 'combined']) {
     const review = reviewExpeditionPlan(selected(), plan('icebound.lumen-shelf', method))
     assert.equal(review.allowed, true)
     assert.equal(review.actionSlotCost, 1)
-    assert.equal(review.requiredResources.oxygen ?? 0, method === 'rover-only' ? 0 : 6)
+    assert.equal(review.requiredResources.oxygen ?? 0, method === 'rover-only' ? 0 : 1)
   })
 }
 test('planning checks actual deployed confirmed inventory and selected tools', () => {
@@ -59,7 +59,7 @@ test('execution revalidates changed resources and equipment after approval', () 
   assert.equal(resolveExpedition(context).allowed, true)
   context.game.resources.power = 0
   assert.equal(resolveExpedition(context).proposedEffects, null)
-  context.game.resources.power = 90
+  context.game.resources.power = 3
   context.readiness.roverOperational = false
   assert.equal(resolveExpedition(context).proposedEffects, null)
 })

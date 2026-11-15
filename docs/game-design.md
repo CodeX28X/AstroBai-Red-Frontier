@@ -4,9 +4,29 @@
 
 AstroBai: Red Frontier is a browser-based educational Mars mission simulator built with React, TypeScript, and Vite.
 
-## Setup phase
+## Playable campaign
 
-This repository currently contains a bootable project setup screen only. Gameplay, mission events, objective progression, simulation behavior, and resource calculations have not been implemented.
+### Current preparation and exploration
+
+Final polish makes BAI's active subtitles speak automatically after a meaningful interaction, unless the player has muted voice. Voice and short sound effects have separate saved switches; captions are always present. Cargo confirmation, launch, plan approval and expedition execution use one confirmation dialog each. Ordinary inspections and comparisons stay immediate. Fieldwork shows travel progress, executes once on arrival, and can be cancelled before spending an Action.
+
+The ICEBOUND cargo and planning screens explain that sealed sample containers and the Soil Analysis Kit protect evidence quality. The existing optional kit includes both; basic standard tools can complete an investigation with an inconclusive finding. Surface material answers a surface question; drilling reaches a buried layer without creating ice. In the default fictional scenario, Lumen Shelf has a dry surface and subsurface ice, Cinder Flats is dry at both sampled levels, and Echo Ridge remains uncertain. These scenario truths and the existing quality/classification rules are unchanged. Reports identify the actual site, method, observations, limitations and a next investigation. Negative and uncertain results remain scientific achievements.
+
+Weather cards separate the game scenario's restrictions, their meaning and suggested checks. There is no live Mars weather or surface-radiation feed. NASA references provide general science and never stand in for current measurements. Site and sample art is labeled illustration; its appearance is not evidence of ice.
+
+Players have three Actions per Mars Day. Inspections, walking, mission-log guidance and dialogue are free. Randomized preparation uses a conservative minimum and the remaining cargo capacity; Mission Control review and confirmation are still required. The main mission introduction and four-step HUD guide can be replayed from Help. See `child-friendly-report.md`.
+
+New missions automatically select 5 of each resource, adjustable from 0–10, within 35 cargo spaces. Confirmation copies the quantities directly; there is no extra reserve. The optional science kit explicitly uses 14 catalog spaces. Standard outpost science equipment supports investigation without optional cargo. Daily consumption is 1 of each resource; facility jobs restore 5 Energy or 4 Oxygen, Water or Food (the latter three cost 1 Energy). Each production job costs one action and runs once per sol. Zero reserves after daily use cause failure. See `gameplay-fixes-report.md` for costs, an 18-job two-site survival route and validation.
+
+The map scene fills the viewport, with translucent HUD/objective/dialogue/tool overlays. Character speech uses replaceable labeled portraits and click/keyboard continuation. Inspection and dialogue observations persist separately from mission completion. See `hud-supplies-report.md` for validation and compatibility details.
+
+The main entry now provides the approved menu → preparation → launch → visual travel → landing → outpost → debrief flow. The outpost begins on Sol 1 and closes only after Sol 10 is completed. Existing ICEBOUND rules determine exploration costs, eligibility and findings. There is no additional cruise-choice or Earth-return gameplay.
+
+The player sees one objective, a short character message and three derived status groups: Energy, Supplies and Safety. Ground taps move the lead character along collision-aware routes. Buildings offer free inspections; real mission work uses reducer-backed actions. No mandatory tutorial blocks progress.
+
+The playable campaign declares fictional pre-installed lab and drilling capability using the existing initialization option. Recommended optional science cargo contains Scout, a repair toolkit, a soil analysis kit, sample containers and portable EVA oxygen. The player may change or omit cargo; real readiness checks apply.
+
+The old GDD's engineering formulas, power sliders, recurring emergencies and evidence-point scoring remain outside this engine. The implemented resource rules use simple fictional game units. Each site retains its own plan, expedition and report; one report completes ICEBOUND and additional sites are optional. Scientific findings still depend on scenario material, sampling depth, handling, instruments and documentation, not points or the crew's preferred outcome.
 
 ## Design goals for later phases
 

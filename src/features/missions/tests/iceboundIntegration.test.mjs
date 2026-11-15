@@ -13,7 +13,7 @@ test('fixture uses the shared confirmed preparation contract and remains within 
   assert.equal(context.game.phase, 'outpost')
   assert.equal(context.game.sol, 3)
   assert.equal(context.game.outcome, null)
-  assert.equal(context.game.actionsRemaining, 2)
+  assert.equal(context.game.actionsRemaining, 3)
   assert.equal(context.game.actionLimits.maxSol, 10)
 })
 
@@ -23,12 +23,12 @@ test('fixture retains the central reducer terminal guard and ten-sol boundary', 
   const before = structuredClone(terminal)
   assert.throws(() => nextSol(terminal), /game is terminal/)
   assert.deepEqual(terminal, before)
-  const atLimit = { ...context, game: { ...context.game, sol: 10 } }
+  const atLimit = { ...context, game: { ...context.game, sol: 10, completedSol: 10 } }
   assert.throws(() => nextSol(atLimit), /maximum sol reached/)
 })
 
 
-test('a complete ICEBOUND investigation fits the real two-slot sol loop and 10-sol mission', () => {
+test('a complete ICEBOUND investigation fits the real three-Action Mars Day loop and 10-sol mission', () => {
   let context = fixture()
   const initialResources = { ...context.game.resources }
   const intents = [
@@ -36,10 +36,10 @@ test('a complete ICEBOUND investigation fits the real two-slot sol loop and 10-s
     { type: 'APPROVE_PLAN', plan: plan() }, { type: 'EXECUTE_EXPEDITION' },
   ]
   for (const intent of intents) context = act(context, intent)
-  assert.equal(context.game.actionsRemaining, 0)
-  assert.equal(iceboundEngine(context, { type: 'COLLECT_SAMPLE', method: 'subsurface-drilling' }).allowed, false)
+  assert.equal(context.game.actionsRemaining, 1)
+  assert.equal(iceboundEngine(context, { type: 'COLLECT_SAMPLE', method: 'subsurface-drilling' }).allowed, true)
   context = nextSol(context)
-  assert.equal(context.game.actionsRemaining, 2)
+  assert.equal(context.game.actionsRemaining, 3)
   context = act(context, { type: 'COLLECT_SAMPLE', method: 'subsurface-drilling' })
   context = act(context, { type: 'ANALYZE_SAMPLE', sampleId: context.mission.samples[0].id })
   context = act(context, { type: 'GENERATE_REPORT' })
@@ -48,7 +48,7 @@ test('a complete ICEBOUND investigation fits the real two-slot sol loop and 10-s
   assert.equal(context.game.missions.icebound, 'completed')
   assert.equal(getMissionStatus(context).completedCount, 6)
   assert.equal(context.mission.report.conclusion, 'supports-accessible-ice')
-  assert.equal(context.game.resources.power, initialResources.power - 14)
+  assert.equal(context.game.resources.power, initialResources.power - 5)
   assert.equal(context.mission.costs.reduce((sum, cost) => sum + cost.actionSlots, 0), 4)
   assert.ok(Object.values(context.game.resources).every((value) => value >= 0))
   assert.ok(context.mission.report.reconnaissance.length === 3)

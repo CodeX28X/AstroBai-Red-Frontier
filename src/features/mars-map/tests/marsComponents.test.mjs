@@ -29,7 +29,7 @@ writeFileSync(join(scratch, 'entry.ts'), entries.map(([name, file]) =>
   'export { ' + name + ' } from ' + JSON.stringify(join(root, file).replaceAll('\\', '/')) + ';'
 ).join('\n'));
 await build({
-  configFile: false, root: projectRoot, logLevel: 'silent',
+  configFile: false, root: projectRoot, logLevel: 'silent', publicDir: false,
   build: {
     outDir: scratch, emptyOutDir: false, minify: false,
     lib: { entry: join(scratch, 'entry.ts'), formats: ['cjs'], fileName: () => 'components.cjs' },
