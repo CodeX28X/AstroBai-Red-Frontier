@@ -20,6 +20,9 @@ after(() => {
   rmSync(scratch, { recursive: true, force: true });
 });
 const entries = [
+  ['SampleIllustration', 'components/SampleIllustration.tsx'],
+  ['WeatherResults', 'components/WeatherResults.tsx'],
+  ['AdventureSites', 'components/AdventureMission.tsx'],
   ['CharacterDialogue', 'components/CharacterDialogue.tsx'],
   ['AdventurePreparation', 'components/AdventurePreparation.tsx'],
   ['CHARACTERS', 'data/characters.ts'],
@@ -49,7 +52,7 @@ writeFileSync(join(scratch, 'entry.ts'), entries.map(([name, file]) =>
   'export { ' + name + ' } from ' + JSON.stringify(join(root, file).replaceAll('\\', '/')) + ';'
 ).join('\n'));
 await build({
-  configFile: false, root: projectRoot, logLevel: 'silent',
+  configFile: false, root: projectRoot, logLevel: 'silent', publicDir: false,
   build: {
     outDir: scratch, emptyOutDir: false, minify: false,
     lib: { entry: join(scratch, 'entry.ts'), formats: ['cjs'], fileName: () => 'components.cjs' },
@@ -57,7 +60,7 @@ await build({
   },
 });
 const require = createRequire(import.meta.url);
-const { MainMenu, SceneFrame, OutpostSlot, DeveloperAExperience, FacilityInspection, PowerPlanPanel, experienceFixture, previewPresets, presetValidation, feedbackCopy, formatCopy, CharacterDialogue, AdventurePreparation, CHARACTERS, createInitialGameState, gameReducer, ResourceHud, CAMPAIGN_OPTIONS, ExpeditionEquipment, FacilityProduction, selectIceboundContext, MissionEnding, HudObjective, PixelImage } = require(join(scratch, 'components.cjs'));
+const { MainMenu, SceneFrame, OutpostSlot, DeveloperAExperience, FacilityInspection, PowerPlanPanel, experienceFixture, previewPresets, presetValidation, feedbackCopy, formatCopy, CharacterDialogue, AdventurePreparation, CHARACTERS, createInitialGameState, gameReducer, ResourceHud, CAMPAIGN_OPTIONS, ExpeditionEquipment, FacilityProduction, selectIceboundContext, MissionEnding, HudObjective, PixelImage, SampleIllustration, WeatherResults, AdventureSites } = require(join(scratch, 'components.cjs'));
 const render = (component, props) => renderToStaticMarkup(React.createElement(component, props));
 test('spoken dialogue has the correct replaceable portrait, name and continue control', () => {
   for (const [speakerId, speaker] of Object.entries(CHARACTERS)) {
@@ -220,4 +223,12 @@ test('science-site inspection never offers a facility interior', () => {
 });
 test('empty selection renders no inspection card', () => {
  assert.equal(render(FacilityInspection,{facilityId:null,onClose(){},onEnter(){}}),'');
+});
+
+test('method illustrations and research site images use semantic metadata and supplied slots',()=>{
+  for(const [method,file,label] of [['surface-sampling','surface-sample.png','Surface sample'],['subsurface-drilling','drilled-sample.png','Subsurface drilled sample']]){const html=render(SampleIllustration,{method});assert.ok(html.includes(file));assert.ok(html.includes(label));assert.match(html,/appearance alone does not prove ice/)}
+  const html=render(AdventureSites,{state:gameReducer(createInitialGameState(),{type:'START_GAME'}),dispatch(){},onChosen(){}});for(const name of ['lumen-shelf','cinder-flats','echo-ridge'])assert.ok(html.includes('/assets/exploration/sites/'+name+'.png'));assert.match(html,/Route safety/)
+});
+test('weather briefing labels simulated and unavailable data and retains secondary NASA references',()=>{
+  const html=render(WeatherResults,{readiness:{weather:'caution',radiation:'blocked'}});assert.match(html,/Game scenario/);assert.match(html,/Live Mars observations unavailable/);assert.match(html,/NASA references/);assert.match(html,/science.nasa.gov/);assert.match(render(WeatherResults,{}),/Unavailable/)
 });

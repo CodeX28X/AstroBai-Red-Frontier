@@ -24,7 +24,7 @@ export function NavigatingActor({ request, mesh, initial, indoor = false, active
   // State changes mark animation boundaries only; frame positions stay in refs/DOM.
   /* oxlint-disable react/set-state-in-effect */
   useLayoutEffect(() => {
-    if (!request || !active || !visible) return
+    if (!request || !active || !visible) { setState('idle'); return }
     if (arrived.current === request.id) {
       const cue = `${request.id}:${request.activity ?? 'idle'}`
       if (playedCue.current === cue) { setState('idle'); return }

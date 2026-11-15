@@ -1,6 +1,14 @@
-import type { IceboundAnalysis, IceboundContext, IceboundSample, IceboundScienceReport } from '../../types/icebound.ts'
-import { scenarioFor } from './readiness.ts'
+import type { ExpeditionPlan, IceboundAnalysis, IceboundContext, IceboundSample, IceboundScienceReport } from '../../types/icebound.ts'
+import { capabilitiesFor, scenarioFor } from './readiness.ts'
 import { activeObjectives, currentSamples, currentAnalyses } from './siteProgress.ts'
+
+export function plannedSampleQuality(context: IceboundContext, plan: ExpeditionPlan): IceboundSample['quality'] {
+  return { handling: plan.equipmentIds.includes('sample-container-set') ? 'sealed' : 'basic', instrument: capabilitiesFor(context, [...plan.equipmentIds]).has('field-analysis') ? 'field' : 'basic', documented: context.mission.observations.some(item => item.siteId === plan.siteId) }
+}
+/** Same quality boundary used by classification and by the player's planning checklist. */
+export function evidenceQualityIssues(quality: IceboundSample['quality']): string[] {
+  return [quality.handling !== 'sealed' ? 'Sealed sample containers help protect the material.' : '', quality.instrument !== 'field' ? 'A Soil Analysis Kit records field-instrument context.' : '', !quality.documented ? 'A recorded survey is needed to document the sample location.' : ''].filter(Boolean)
+}
 
 /** Scenario truth and investigation quality are separate inputs. No equipment can create ice. */
 export function evaluateSampleAnalysis(context: IceboundContext, sample: IceboundSample): IceboundAnalysis {
@@ -15,7 +23,7 @@ export function evaluateSampleAnalysis(context: IceboundContext, sample: Iceboun
       conclusion: 'The investigation is incomplete; this is not evidence that ice is absent.', limitations: ['A usable sample and matching scenario record are required.'] }
   }
   const finding = sample.method === 'subsurface-drilling' ? conditions.subsurface : conditions.surface
-  const qualityReady = sample.quality.handling === 'sealed' && sample.quality.instrument === 'field' && sample.quality.documented
+  const qualityReady = evidenceQualityIssues(sample.quality).length === 0
   if (!qualityReady || finding === 'unknown') {
     return { ...base, classification: 'inconclusive', observed: 'The available evidence does not clearly distinguish ice from other material.',
       conclusion: 'We cannot tell yet. Recording uncertainty is a useful scientific result.', limitations: [

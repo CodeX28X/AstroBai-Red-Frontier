@@ -1,5 +1,17 @@
 ﻿# Integration contract
 
+## Final gameplay polish — 2026-11-15
+
+Baseline: `92079fffb9fdbf49cdec160afd2a2c81d4d3090e` on `feat/final-gameplay-science-polish`; build/lint/270 tests pass. The user authorizes the final audio, imagery, explanation and confirmation iteration. No resource costs, action limits, geological scenarios, story scripts, save schema or scientific classifications change.
+
+- A owns one optional browser-audio provider: user-gesture unlock, automatic current-caption narration, preferred English voice fallback, persisted independent voice/effects toggles and synthesized short sound cues. No audio changes GameState. Active modal/guide captions take precedence; unrelated rerenders cannot replay speech.
+- C's `getActionBlocker(GameState, GameAction)` previews the existing pure reducer for confirmation validation only. The real reducer still commits once and revalidates. A's native-dialog confirmation control guards rapid duplicate activation, exposes pending/errors, and restores focus. A/B show a pending journey and cancel control instead of repeatedly restarting navigation.
+- D exposes existing evidence-quality checks and planned sample quality as pure read-only selectors shared by sampling/classification and planning advice. Their extraction preserves results exactly. A reports recorded findings/site/method/quality/limitations; unselected optional sealed containers and field instruments explain the repeated inconclusive path. No equipment creates ice. E reviews science copy and QA.
+- B/A consume a typed site-art registry, actual sample method mappings and distinct method fallbacks. Shared PixelImage resolves public URLs against Vite BASE_URL; source asset identifiers remain compatible.
+- D/E provide weather interpretation of existing simulated readiness flags, with unavailable live observations explicitly separated from NASA general science. No live weather API or fabricated historical/current measurements are introduced. Source links remain secondary references.
+
+This records the user-authorized interfaces before implementation; it does not claim independent owner sign-off. Final checks include production preview at root and a deployment subpath, real reducer playthroughs, browser input/audio/modal lifecycle, missing assets, refresh/reset, and separate baseline/final commits.
+
 ## Child-friendly interactions — 2026-11-15
 
 The supplied request authorizes three Actions per Mars Day, randomized preparation, and presentation/accessibility improvements. C remains the sole gameplay writer; D's existing readiness, mission and science engines remain authoritative. A/B render those validations and navigate without completing objectives. No new simulator, repair system, mission store, or scientific classification is introduced. This records the user-authorized contract before implementation; independent owner review remains required before merge.

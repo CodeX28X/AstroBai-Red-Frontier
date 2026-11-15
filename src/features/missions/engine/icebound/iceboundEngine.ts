@@ -8,7 +8,7 @@ import { ICEBOUND_SITES } from '../../data/iceboundSites.ts'
 import { ICEBOUND_SCENARIOS } from '../../data/iceboundScenarios.ts'
 import { validateObjective } from './objectives.ts'
 import { evaluateResearchSite, reviewExpeditionPlan } from './planning.ts'
-import { evaluateSampleAnalysis, generateScienceReport } from './science.ts'
+import { evaluateSampleAnalysis, generateScienceReport, plannedSampleQuality } from './science.ts'
 import { availableEquipment, baseIssues, balanceFor, capabilitiesFor, costIssues, fieldIssues, samplingCost, scenarioFor } from './readiness.ts'
 import { activeObjectives, objectiveMarker, operationKey } from './siteProgress.ts'
 
@@ -164,8 +164,7 @@ export function resolveSampling(context: IceboundContext, method: SamplingMethod
     id: `${encodeURIComponent(context.mission.runId)}:${context.mission.scenarioId}:${plan.siteId}:${method}:sample-1`,
     expeditionId: expedition.id, siteId: plan.siteId, scenarioId: context.mission.scenarioId,
     method, collectedSol: context.game.sol, status: 'collected',
-    quality: { handling: plan.equipmentIds.includes('sample-container-set') ? 'sealed' : 'basic',
-      instrument: capabilities.has('field-analysis') ? 'field' : 'basic', documented: context.mission.observations.some((item) => item.siteId === plan.siteId) },
+    quality: plannedSampleQuality(context, plan),
     observation: method === 'subsurface-drilling' ? 'A fictional subsurface sample was collected and labeled.' : 'A fictional surface sample was collected and labeled. It does not describe deeper material.',
     scienceReferenceIds: ['nasa-perseverance-objectives', 'nasa-swim'],
   }

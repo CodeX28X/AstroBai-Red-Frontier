@@ -5,6 +5,8 @@ import { ResourceSummary } from './ResourceSummary'
 import './missionEnding.css'
 import { ResourceIcon } from '../../../shared/components/ResourceIcon'
 import { VoiceControls } from './VoiceControls'
+import { RESULT_LABELS } from '../data/adventureDirector'
+import { sciencePresentation } from '../data/sciencePresentation'
 
 export function MissionEnding({state,onPlayAgain,onReport,onMenu}:{state:GameState;onPlayAgain:()=>void;onReport:()=>void;onMenu:()=>void}) {
   const summary=endingSummary(state)
@@ -18,6 +20,7 @@ export function MissionEnding({state,onPlayAgain,onReport,onMenu}:{state:GameSta
         <article><span aria-hidden="true">⌂</span><h2>Crew safety</h2><strong>{summary.crew}</strong></article>
         <article><span aria-hidden="true">◇</span><h2>ICEBOUND science</h2><strong>{summary.science}</strong>{summary.findings.map(finding=><small key={finding}>{finding}</small>)}</article>
       </div>
+      <section className="ending-investigations" aria-label="ICEBOUND investigation summaries"><h2>Our scientific achievements</h2>{state.icebound.investigations.filter(site=>site.report?.samples&&site.report.findings).map(site=>{const info=sciencePresentation(site.report!);return <article key={site.siteId} className={`ending-science result-${info.classification}`}><strong>{info.site} · {info.status}</strong><p>{info.method} · {RESULT_LABELS[info.classification]}</p><details><summary>Evidence, lesson and Mission Control feedback</summary><p>{info.finding?.observed}</p><p>{info.finding?.conclusion}</p><p>{info.quality.join(' ')||site.report!.limitations[0]}</p><p>{info.lesson}</p><p>{info.control}</p><p>Next: {info.next}</p></details></article>})}</section>
       <section className="ending-resources"><h2>Supplies remaining</h2><ResourceSummary resources={state.resources}/></section>
       <section className="ending-lessons"><h2>What we learned</h2>{summary.lessons.map(lesson=><p key={lesson}>{lesson}</p>)}</section>
     </div>

@@ -1,21 +1,10 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo } from 'react'
+import { createSoundEffects } from '../data/sound'
 
-// A soft, synthesized UI tap; no downloads, music files, gameplay effects or timers.
+/** Adapter for the independent legacy preview; gameplay uses the shared audio provider. */
 export function useUiSound(enabled: boolean) {
-  const context = useRef<AudioContext | null>(null)
-  useEffect(() => () => {void context.current?.close().catch(() => undefined)},[])
-  return () => {
-    if (!enabled || typeof window === 'undefined' || !('AudioContext' in window)) return
-    try {
-      context.current ??= new AudioContext()
-      const audio=context.current
-      if (audio.state === 'suspended') void audio.resume().catch(() => undefined)
-      const oscillator=audio.createOscillator(), gain=audio.createGain(), now=audio.currentTime
-      oscillator.type='sine';oscillator.frequency.value=440
-      gain.gain.setValueAtTime(0,now);gain.gain.linearRampToValueAtTime(0.025,now+0.005);gain.gain.exponentialRampToValueAtTime(0.0001,now+0.06)
-      oscillator.connect(gain);gain.connect(audio.destination)
-      oscillator.start(now);oscillator.stop(now+0.065)
-      oscillator.onended=()=>{oscillator.disconnect();gain.disconnect()}
-    } catch {/* Audio is optional; blocked audio never blocks an interaction. */}
-  }
+  const effects=useMemo(()=>createSoundEffects(()=>typeof window!=='undefined'&&typeof window.AudioContext==='function'?new AudioContext():null),[])
+  useEffect(()=>{effects.enable(enabled)},[effects,enabled])
+  useEffect(()=>()=>effects.dispose(),[effects])
+  return ()=>{if(enabled)void effects.unlock().then(()=>effects.play('tap'))}
 }

@@ -1,0 +1,17 @@
+{
+  "base": "/red-frontier/",
+  "siteImages": [
+    "/red-frontier/assets/exploration/sites/lumen-shelf.png",
+    "/red-frontier/assets/exploration/sites/cinder-flats.png",
+    "/red-frontier/assets/exploration/sites/echo-ridge.png"
+  ],
+  "sampleImages": [
+    "/red-frontier/assets/science/samples/surface-sample.png",
+    "/red-frontier/assets/science/samples/drilled-sample.png"
+  ],
+  "refresh": true,
+  "methodFallbacks": true,
+  "siteFallback": true,
+  "rootAssetRequests": 0,
+  "errors": []
+}

@@ -1,0 +1,71 @@
+.audio-session { display: contents; }
+.adventure button:focus-visible, .adventure select:focus-visible, .adventure input:focus-visible, .adventure summary:focus-visible { outline: 3px solid #fff0a0; outline-offset: 3px; }
+.adventure .voice-controls button, .adventure .voice-controls select { min-height: 40px; }
+.audio-settings { display: flex; flex-wrap: wrap; gap: 10px; padding: 14px; border: 2px solid #7db4ae; }
+.audio-settings legend { font-size: 22px; }
+.audio-settings p { flex-basis: 100%; margin: 4px 0; }
+.research-site-card { position: relative; display: flex; flex-direction: column; gap: 8px; }
+.research-site-card > .research-site-image { width: 100%; height: 165px; object-fit: contain; background: #234650; border: 1px solid #8db7ae; }
+.research-site-card > .asset-unavailable { display: grid; place-items: center; font-size: 60px; background: repeating-linear-gradient(145deg,#8d5949 0 20px,#bd7b58 20px 40px); }
+.site-cinder > .asset-unavailable { background: radial-gradient(ellipse at center,#473940 20%,#9e5c42 21% 40%,#c48152 41%); }
+.site-echo > .asset-unavailable { background: repeating-linear-gradient(125deg,#ab6e50 0 12px,#e2b582 12px 24px,#553e41 24px 42px); }
+.adventure .site-selected { border: 3px solid #f5dc8f; }
+.selected-site-label { color: #ffdf8d; padding: 6px; }
+.research-site-card .site-number { position: static; }
+.research-site-card .action-control { margin-top: auto; }
+.site-art-note { font-size: 14px; line-height: 1.4; color: #dfede3; }
+.sample-illustration { margin: 0; display: grid; justify-items: center; gap: 8px; }
+.sample-illustration > .pixel-image { width: 100%; height: 210px; object-fit: contain; }
+.sample-illustration figcaption { font-size: 17px; font-weight: 700; color: #fff0c4; }
+.sample-illustration figcaption small { display: block; font-size: 13px; font-weight: 400; margin-top: 5px; }
+.sample-illustration > .asset-unavailable { display: grid; place-items: center; font-size: 52px; line-height: 1; border: 4px solid #ffda8b; background: #6a4e41; }
+.sample-surface > .asset-unavailable { width: 88%; height: 120px; margin-top: 70px; border-radius: 4px 4px 26px 26px; background: radial-gradient(#d89461 15%,transparent 16%) 0 0/28px 28px,#714e40; }
+.sample-core > .asset-unavailable { width: 45%; height: 205px; border-radius: 20px; background: repeating-linear-gradient(170deg,#a56b4c 0 26px,#dac397 26px 36px,#70463c 36px 60px); }
+.expedition-wizard .sample-illustration.expedition-choice-art { width: 100%; height: auto; min-height: 160px; }
+.expedition-wizard .sample-illustration > .pixel-image { height: 130px; }
+.expedition-wizard .sample-surface > .asset-unavailable { height: 75px; margin-top: 55px; font-size: 42px; }
+.expedition-wizard .sample-core > .asset-unavailable { height: 130px; }
+.evidence-advice { margin: 12px 0; padding: 12px 16px; border: 1px solid #d9c38e; border-left: 4px solid #d9c38e; background: #29454d; }
+.evidence-advice p { font-size: 17px; margin: 7px 0; line-height: 1.35; }
+.evidence-advice small { font-size: 15px; }
+.science-result { align-items: start; gap: 20px; }
+.science-result-art { min-width: 0; }
+.science-result .science-result-symbol { position: static; display: inline-block; margin-top: 10px; padding: 2px 10px; font-size: 30px; }
+.science-result .sample-metadata { display: grid; grid-template-columns: auto 1fr; gap: 5px 12px; font-size: 17px; margin: 12px 0; }
+.sample-metadata dt { color: #c2e5d7; font-weight: 700; }
+.sample-metadata dd { margin: 0; }
+.science-result p { font-size: 20px; }
+.science-result .result-status { font-weight: 700; font-size: 17px; color: #c8eee0; }
+.science-evidence { grid-column: 1/-1; border-top: 1px solid #8fb5ad; padding-top: 12px; }
+.science-evidence h4 { margin: 10px 0; font-size: 21px; }
+.science-evidence ul { font-size: 18px; line-height: 1.4; }
+.science-result.result-supports-accessible-ice { border-top: 4px solid #9cdfd5; padding-top: 12px; }
+.science-result.result-no-accessible-ice-detected { border-top: 4px solid #b5d6f5; padding-top: 12px; }
+.science-result.result-inconclusive { border-top: 4px solid #d4c0ec; padding-top: 12px; }
+.science-result.result-analysis-incomplete { border-top: 4px dashed #ecd29c; padding-top: 12px; }
+.weather-results { border: 2px solid #88b4ae; padding: 16px; margin-bottom: 24px; background: #20424b; }
+.weather-results h3 { font-size: 27px; margin-top: 0; }
+.weather-results .data-mode { font-weight: 700; color: #ffe19e; }
+.weather-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.weather-cards article { background: #17343e; padding: 16px; border: 1px solid #83b0a8; }
+.weather-cards h4 { font-size: 23px; margin: 0 0 10px; }
+.weather-cards dt { font-weight: 700; color: #e9d39e; margin-top: 12px; }
+.weather-cards dd { margin: 5px 0; font-size: 18px; line-height: 1.45; }
+.confirmation-error { border: 2px solid #f7cd83; padding: 12px; color: #fff0c2; }
+.confirmation-actions button { min-height: 48px; }
+.journey-progress { position: absolute; z-index: 320; right: 14px; bottom: 220px; width: min(310px,calc(100% - 28px)); padding: 14px; background: #183b47f5; border: 2px solid #b6dccb; font-size: 18px; }
+.journey-progress button { margin-top: 10px; display: block; }
+.ending-investigations h2 { font-size: 20px; margin: 8px 0; }
+.ending-science { border-left: 4px solid #b1dacc; background: #21444d; padding: 10px 14px; margin: 8px 0; }
+.ending-science.result-inconclusive { border-color: #d4c0ec; }
+.ending-science.result-no-accessible-ice-detected { border-color: #b5d6f5; }
+.ending-science p { font-size: 17px; margin: 6px 0; }
+.ending-science summary { font-size: 17px; }
+@media(max-width:700px) {
+  .weather-cards { grid-template-columns: 1fr; }
+  .research-site-card > .research-site-image { height: 180px; }
+  .science-result .sample-metadata { grid-template-columns: 1fr; }
+  .sample-metadata dd { margin-bottom: 7px; }
+  .adventure .journey-progress { bottom: 280px; max-height: 160px; overflow: auto; }
+  .adventure .voice-controls button { min-height: 44px; }
+}

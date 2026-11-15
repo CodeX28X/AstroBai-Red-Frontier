@@ -1,8 +1,9 @@
 import type { GameState } from '../../../shared/types/game'
 import { selectIceboundView } from '../../../shared/store/iceboundSelectors'
-import { ADVENTURE_ASSETS } from '../../../shared/assets/gameAssets'
-import { PixelImage } from '../../../shared/components/PixelImage'
 import { VoiceControls } from './VoiceControls'
+import type { IceboundScienceReport } from '../../missions/types/icebound'
+import { SampleIllustration } from './SampleIllustration'
+import { sciencePresentation } from '../data/sciencePresentation'
 
 const SCIENCE_RESULT_COPY = {
   'supports-accessible-ice': { title: 'Evidence of water ice!', text: 'This sample supports the presence of water ice. One sample cannot tell us about all of Mars.', next: 'Read the report, then try another site.', symbol: '✧' },
@@ -10,8 +11,13 @@ const SCIENCE_RESULT_COPY = {
   inconclusive: { title: 'We cannot tell yet', text: 'The evidence is uncertain. An honest “not sure” is useful science, too.', next: 'Review our tools and sampling method for next time.', symbol: '?' },
   'analysis-incomplete': { title: 'Analysis not finished', text: 'We need a collected sample and a completed lab analysis before drawing a conclusion.', next: 'Follow the mission log to the next science step.', symbol: '⚗' },
 } as const
-export function ScienceResult({ state }: { state: GameState }) {
-  const report = selectIceboundView(state).report, sample = report.samples[0]
-  const classification = report.conclusion ?? 'analysis-incomplete', copy = SCIENCE_RESULT_COPY[classification]
-  return <section className={`science-result result-${classification}`}><div className="science-result-art"><PixelImage src={sample ? ADVENTURE_ASSETS.samples[sample.method] : ADVENTURE_ASSETS.samples.placeholder} fallbackSrc={ADVENTURE_ASSETS.samples.placeholder} alt={sample ? `${sample.method === 'subsurface-drilling' ? 'Drilled' : 'Surface'} sample collected for analysis` : 'No sample collected yet'} fallbackText="◇"/><span className="science-result-symbol" aria-hidden="true">{copy.symbol}</span></div><div><span className="overline">DR. KOFI / OUR SAMPLE</span><h3>{copy.title}</h3><p>{copy.text}</p><strong>Next: {copy.next}</strong><VoiceControls id={`science.${report.outcomeId}`} text={`${copy.title}. ${copy.text} ${copy.next}`} speaker="kofi"/></div></section>
+export function ScienceResult({ state, report: provided }: { state: GameState; report?: IceboundScienceReport }) {
+  const report = provided ?? selectIceboundView(state).report, summary = sciencePresentation(report)
+  const { sample, finding, classification } = summary, copy = SCIENCE_RESULT_COPY[classification]
+  const explanation = classification==='analysis-incomplete' ? copy.text : finding?.conclusion ?? copy.text
+  return <section className={`science-result result-${classification}`} aria-label="Scientific investigation result">
+    <div className="science-result-art"><SampleIllustration method={sample?.method}/><span className="science-result-symbol" aria-hidden="true">{copy.symbol}</span></div>
+    <div><span className="overline">FICTIONAL INVESTIGATION / RECORDED EVIDENCE</span><h3>{copy.title}</h3><p className="result-status">{!provided && report.completionStatus==='complete' && !state.icebound.report ? 'Analysis complete · report ready to record' : summary.status}</p><dl className="sample-metadata"><dt>Research site</dt><dd>{summary.site}</dd><dt>Method</dt><dd>{summary.method}</dd>{sample && <><dt>Collected</dt><dd>Mars Day {sample.collectedSol} · {sample.quality.handling==='sealed'?'sealed container':'basic handling'} · {sample.quality.instrument==='field'?'field instrument recorded':'basic instrument context'}</dd></>}</dl><p>{explanation}</p>{classification==='no-accessible-ice-detected' && <p>We learned something new! A negative result is useful science.</p>}<strong>Next: {summary.next}</strong><VoiceControls id={`science.${report.siteId}.${report.outcomeId}`} text={`${copy.title}. ${summary.site}. ${summary.method}. ${explanation} Next: ${summary.next}`} speaker="kofi"/></div>
+    <div className="science-evidence"><h4>What the evidence tells us</h4><p>{finding?.observed ?? 'No completed analysis is recorded for this investigation.'}</p>{sample && <p>{sample.observation}</p>}<h4>Challenges and limits</h4><ul>{[...summary.quality,...report.limitations].map((item,index)=><li key={index}>{item}</li>)}</ul><p><strong>Lesson:</strong> {summary.lesson}</p><p>{summary.control}</p></div>
+  </section>
 }

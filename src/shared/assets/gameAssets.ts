@@ -11,6 +11,12 @@ export const RESOURCE_ASSETS = {
 /** No equipment PNGs were supplied. Add only inspected, matching catalog artwork here. */
 export const EQUIPMENT_ART: Partial<Record<EquipmentId,string>> = {}
 
+export const RESEARCH_SITE_ART = {
+  'icebound.lumen-shelf': { src: '/assets/exploration/sites/lumen-shelf.png', alt: 'Illustrated layered cliffs at the fictional Lumen Shelf; artwork is not scientific evidence', symbol: '▤', className: 'site-lumen' },
+  'icebound.cinder-flats': { src: '/assets/exploration/sites/cinder-flats.png', alt: 'Rocky plain and outpost at the fictional Cinder Flats', symbol: '▲', className: 'site-cinder' },
+  'icebound.echo-ridge': { src: '/assets/exploration/sites/echo-ridge.png', alt: 'Steep layered ridges at the fictional Echo Ridge', symbol: '⋀', className: 'site-echo' },
+} as const
+
 /** Inspected supplied artwork. PixelImage must wrap every optional bitmap. */
 export const ADVENTURE_ASSETS = {
   missionIntro: '/assets/mission-intro/main-mission.png',
