@@ -13,7 +13,7 @@ test('fixture uses the shared confirmed preparation contract and remains within 
   assert.equal(context.game.phase, 'outpost')
   assert.equal(context.game.sol, 3)
   assert.equal(context.game.outcome, null)
-  assert.equal(context.game.actionsRemaining, 2)
+  assert.equal(context.game.actionsRemaining, 3)
   assert.equal(context.game.actionLimits.maxSol, 10)
 })
 
@@ -28,7 +28,7 @@ test('fixture retains the central reducer terminal guard and ten-sol boundary', 
 })
 
 
-test('a complete ICEBOUND investigation fits the real two-slot sol loop and 10-sol mission', () => {
+test('a complete ICEBOUND investigation fits the real three-Action Mars Day loop and 10-sol mission', () => {
   let context = fixture()
   const initialResources = { ...context.game.resources }
   const intents = [
@@ -36,10 +36,10 @@ test('a complete ICEBOUND investigation fits the real two-slot sol loop and 10-s
     { type: 'APPROVE_PLAN', plan: plan() }, { type: 'EXECUTE_EXPEDITION' },
   ]
   for (const intent of intents) context = act(context, intent)
-  assert.equal(context.game.actionsRemaining, 0)
-  assert.equal(iceboundEngine(context, { type: 'COLLECT_SAMPLE', method: 'subsurface-drilling' }).allowed, false)
+  assert.equal(context.game.actionsRemaining, 1)
+  assert.equal(iceboundEngine(context, { type: 'COLLECT_SAMPLE', method: 'subsurface-drilling' }).allowed, true)
   context = nextSol(context)
-  assert.equal(context.game.actionsRemaining, 2)
+  assert.equal(context.game.actionsRemaining, 3)
   context = act(context, { type: 'COLLECT_SAMPLE', method: 'subsurface-drilling' })
   context = act(context, { type: 'ANALYZE_SAMPLE', sampleId: context.mission.samples[0].id })
   context = act(context, { type: 'GENERATE_REPORT' })

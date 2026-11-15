@@ -28,6 +28,8 @@ export interface FacilityLocation {
 }
 
 export interface MarsMapProps {
+  readonly renderFacilityCard?: (id: FacilityId) => import('react').ReactNode;
+  readonly highlightedSiteId?: string;
   readonly fullViewport?: boolean;
   readonly navigation?: {
     readonly evaAllowed: boolean;

@@ -17,7 +17,7 @@ test('creates the initial menu state and resources', () => {
   assert.equal(state.phase, 'menu')
   assert.equal(state.sol, 0)
   assert.equal(state.completedSol, 0)
-  assert.equal(state.actionsRemaining, 2)
+  assert.equal(state.actionsRemaining, 3)
   assert.equal(state.actionLimits.maxActionsPerSol, state.actionsRemaining)
   assert.deepEqual(state.resources, { power: 0, oxygen: 0, water: 0, food: 0 })
   assert.deepEqual(state, INITIAL_GAME_STATE)
@@ -37,7 +37,7 @@ test('advances a sol with exactly one unit consumed per resource', () => {
   assert.equal(started.completedSol, 0)
   assert.equal(advanced.sol, 2)
   assert.equal(advanced.completedSol, 1)
-  assert.equal(advanced.actionsRemaining, 2)
+  assert.equal(advanced.actionsRemaining, 3)
   for(const key of Object.keys(started.resources))assert.equal(advanced.resources[key],started.resources[key]-1)
 })
 
@@ -62,9 +62,9 @@ test('spends one slot for each valid major action in the outpost', () => {
     category: 'exploration',
   })
 
-  assert.equal(outpost.actionsRemaining, 2)
-  assert.equal(afterFirst.actionsRemaining, 1)
-  assert.equal(afterSecond.actionsRemaining, 0)
+  assert.equal(outpost.actionsRemaining, 3)
+  assert.equal(afterFirst.actionsRemaining, 2)
+  assert.equal(afterSecond.actionsRemaining, 1)
   assert.deepEqual(afterSecond.spentActionIds, ['repair-array-sol-1', 'icebound-recon-sol-1'])
 })
 
@@ -101,12 +101,12 @@ test('rejected major actions leave action slots unchanged', () => {
     }),
     /only available at the outpost/,
   )
-  assert.equal(afterOne.actionsRemaining, 1)
+  assert.equal(afterOne.actionsRemaining, 2)
   assert.deepEqual(afterOne.spentActionIds, ['repair-array-sol-1'])
-  assert.equal(outsideOutpost.actionsRemaining, 1)
+  assert.equal(outsideOutpost.actionsRemaining, 2)
 })
 
-test('rejects a third major action without consuming another slot', () => {
+test('rejects a fourth major action without consuming another slot', () => {
   const outpost = { ...createInitialGameState(), phase: 'outpost' }
   const afterOne = gameReducer(outpost, {
     type: 'SPEND_ACTION_SLOT',
@@ -119,19 +119,20 @@ test('rejects a third major action without consuming another slot', () => {
     category: 'event-response',
   })
 
+  const afterThree = gameReducer(afterTwo, { type: 'SPEND_ACTION_SLOT', actionId: 'action-3', category: 'exploration' })
   assert.throws(
-    () => gameReducer(afterTwo, {
+    () => gameReducer(afterThree, {
       type: 'SPEND_ACTION_SLOT',
-      actionId: 'action-3',
+      actionId: 'action-4',
       category: 'exploration',
     }),
     /no major actions remain/,
   )
-  assert.equal(afterTwo.actionsRemaining, 0)
-  assert.equal(afterTwo.spentActionIds.length, 2)
+  assert.equal(afterThree.actionsRemaining, 0)
+  assert.equal(afterThree.spentActionIds.length, 3)
 })
 
-test('successful sol advancement resets action slots to two', () => {
+test('successful sol advancement resets action slots to three', () => {
   const outpost = createOutpostState()
   const spent = gameReducer(outpost, {
     type: 'SPEND_ACTION_SLOT',
@@ -141,7 +142,7 @@ test('successful sol advancement resets action slots to two', () => {
   const advanced = gameReducer(spent, { type: 'ADVANCE_SOL' })
 
   assert.equal(advanced.sol, 2)
-  assert.equal(advanced.actionsRemaining, 2)
+  assert.equal(advanced.actionsRemaining, 3)
 })
 
 test('enforces the maximum sol', () => {

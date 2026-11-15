@@ -16,6 +16,7 @@ export interface PreparationState {
 }
 
 export type PreparationIntent =
+  | { type: 'SET_RANDOMIZED_SUPPLIES'; supplies: SupplySelection }
   | { type: 'SET_SUPPLY_QUANTITY'; supplyId: SupplyId; quantity: number }
   | { type: 'SET_SCIENCE_KIT'; packed: boolean }
   | { type: 'SET_EQUIPMENT_QUANTITY'; equipmentId: string; quantity: number }

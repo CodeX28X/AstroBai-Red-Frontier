@@ -8,6 +8,8 @@ AstroBai: Red Frontier is a browser-based educational Mars mission simulator bui
 
 ### Current preparation and exploration
 
+Players have three Actions per Mars Day. Inspections, walking, mission-log guidance and dialogue are free. Randomized preparation uses a conservative minimum and the remaining cargo capacity; Mission Control review and confirmation are still required. The main mission introduction and four-step HUD guide can be replayed from Help. See `child-friendly-report.md`.
+
 New missions automatically select 5 of each resource, adjustable from 0–10, within 35 cargo spaces. Confirmation copies the quantities directly; there is no extra reserve. The optional science kit explicitly uses 14 catalog spaces. Standard outpost science equipment supports investigation without optional cargo. Daily consumption is 1 of each resource; facility jobs restore 5 Energy or 4 Oxygen, Water or Food (the latter three cost 1 Energy). Each production job costs one action and runs once per sol. Zero reserves after daily use cause failure. See `gameplay-fixes-report.md` for costs, an 18-job two-site survival route and validation.
 
 The map scene fills the viewport, with translucent HUD/objective/dialogue/tool overlays. Character speech uses replaceable labeled portraits and click/keyboard continuation. Inspection and dialogue observations persist separately from mission completion. See `hud-supplies-report.md` for validation and compatibility details.

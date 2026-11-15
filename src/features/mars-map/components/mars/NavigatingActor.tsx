@@ -104,6 +104,6 @@ export function NavigatingActor({ request, mesh, initial, indoor = false, active
       <span className="nav-label">{state === 'airlock' ? 'Airlock · suit check' : kind === 'rover' ? 'Scout' : indoor ? 'Captain Kiki' : 'Kiki · EVA suit'}</span>
       {['working', 'scanning', 'sampling'].includes(state) && <span className="nav-tool" aria-hidden="true">✧</span>}
     </div>
-    <div ref={follower} hidden={!request?.companion || !visible} className={`nav-actor nav-companion ${indoor?'nav-indoor':'nav-outdoor'} nav-${state} nav-${request?.companionKind ?? 'astronaut'}`} style={{...cadenceStyle, left: `${initial.x}%`, top: `${initial.y + 10}%` }} aria-label={request?.companionKind === 'rover' ? 'Assigned rover following' : 'Assigned crew following'}><span className="nav-body"><ExpeditionMarker kind={request?.companionKind ?? 'astronaut'}/></span></div>
+    <div ref={follower} hidden={!request?.companion || !visible} className={`nav-actor nav-companion ${indoor?'nav-indoor':'nav-outdoor'} nav-${state} nav-${request?.companionKind ?? 'astronaut'}${reducedMotion ? ' nav-still' : ''}`} style={{...cadenceStyle, left: `${initial.x}%`, top: `${initial.y + 10}%` }} aria-label={request?.companionKind === 'rover' ? 'Assigned rover following' : 'Assigned crew following'}><span className="nav-shadow"/><span className="nav-body"><ExpeditionMarker kind={request?.companionKind ?? 'astronaut'}/></span></div>
   </>
 }

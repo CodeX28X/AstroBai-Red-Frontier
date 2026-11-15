@@ -57,7 +57,7 @@ test('daily consumption applies once to all four resources, resets jobs, and rej
   const action={type:'ADVANCE_SOL',expectedSol:before.sol}
   r.send(action)
   for(const key of Object.keys(before.resources))assert.equal(r.state.resources[key],before.resources[key]-OUTPOST_BALANCE.dailyConsumption[key])
-  assert.equal(r.state.actionsRemaining,2);assert.deepEqual(r.state.consumedSols,[1]);assert.equal(r.state.sol,2)
+  assert.equal(r.state.actionsRemaining,3);assert.deepEqual(r.state.consumedSols,[1]);assert.equal(r.state.sol,2)
   assert.throws(()=>gameReducer(r.state,action),/already advanced/)
   assert.deepEqual(decodeSave(encodeSave(r.actions)).state,r.state)
   const menu=createInitialGameState();assert.throws(()=>gameReducer(menu,{type:'ADVANCE_SOL'}),/outpost/)

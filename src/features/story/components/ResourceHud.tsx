@@ -18,9 +18,9 @@ export function ResourceHud({ resources, hidden, highlight, onInspect }: {
   onInspect: (panel: 'energy' | 'supplies' | 'safety') => void
 }) {
   return <nav className="resource-hud" aria-label="Outpost resources" hidden={hidden}>
-    {indicators.map(item => <button key={item.id} type="button" className={`resource-indicator${highlight === item.panel ? ' is-guided' : ''}`} onClick={() => onInspect(item.panel)}>
+    {indicators.map(item => <button key={item.id} type="button" className={`resource-indicator${resources[item.id] <= 2 ? ' resource-low' : ''}${highlight === item.panel ? ' is-guided' : ''}`} aria-label={`${RESOURCE_ASSETS[item.id].name}: ${resources[item.id]} of ${MAX_RESOURCE_VALUE}${resources[item.id] <= 2 ? ', low reserve warning. Check recovery actions.' : ''}`} onClick={() => onInspect(item.panel)}>
       <span className="resource-label"><ResourceIcon resource={item.id} size={30}/><span className="resource-name">{RESOURCE_ASSETS[item.id].name}</span> <strong>{resources[item.id]}/{MAX_RESOURCE_VALUE}</strong></span>
-      <progress aria-label={`${RESOURCE_ASSETS[item.id].name} reserve`} max={MAX_RESOURCE_VALUE} value={resources[item.id]}/>
+      {resources[item.id] <= 2 && <small className="resource-warning-label">⚠ Low: {resources[item.id]} left</small>}<progress aria-label={`${RESOURCE_ASSETS[item.id].name} reserve`} max={MAX_RESOURCE_VALUE} value={resources[item.id]}/>
     </button>)}
     <button className={`resource-safety${highlight === 'safety' ? ' is-guided' : ''}`} type="button" onClick={() => onInspect('safety')}>Safety</button>
   </nav>

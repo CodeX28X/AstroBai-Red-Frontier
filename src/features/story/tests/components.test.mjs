@@ -104,7 +104,7 @@ test('HUD numbers and native progress bars follow each authoritative resource up
 test('ending shows authoritative outcome, completed sols, resources and honest science classification', () => {
   const base={...createInitialGameState(),phase:'debrief',completedSol:4,resources:{power:0,oxygen:2,water:1,food:1}};
   const failed=render(MissionEnding,{state:{...base,outcome:'failure'},onPlayAgain(){},onReport(){},onMenu(){}});
-  assert.match(failed,/Try Again!/);assert.doesNotMatch(failed,/Mission Complete!/);assert.match(failed,/4 \/ 10/);assert.match(failed,/0\/10/);assert.match(failed,/\/assets\/characters\/bai\/portrait.png/);
+  assert.match(failed,/Mission Paused!/);assert.doesNotMatch(failed,/Mission Complete!/);assert.match(failed,/4 \/ 10/);assert.match(failed,/0\/10/);assert.match(failed,/\/assets\/characters\/bai\/portrait.png/);
   assert.match(failed,/View Mission Report/);assert.match(failed,/Play Again/);assert.doesNotMatch(failed,/Our science notebook/);
   for(const conclusion of ['no-accessible-ice-detected','inconclusive']){
     const state={...base,outcome:'success',completedSol:10,icebound:{...base.icebound,investigations:[{siteId:'icebound.lumen-shelf',report:{conclusion}}]}};
@@ -137,7 +137,7 @@ test('equipment UI lists standard tools and only genuinely packed optional choic
   assert.equal((html.match(/type="checkbox"/g)??[]).length,5);assert.match(html,/Soil Analysis Kit/);assert.equal((html.match(/checked=""/g)??[]).length,1);
   const produced=gameReducer(state,{type:'OPERATE_FACILITY',operationId:'collect-energy',expectedSol:state.sol,expectedResourceRevision:state.resourceRevision});
   html=render(FacilityProduction,{building:'solar-array',state:produced,dispatch(){}});
-  assert.match(html,/production-succeeded/);assert.match(html,/One big job used/);assert.match(html,/disabled=""/);
+  assert.match(html,/production-succeeded/);assert.match(html,/One Action used/);assert.match(html,/aria-disabled="true"/);
 });
 
 test('menu Continue is unavailable without a save and emits only a supplied command', () => {

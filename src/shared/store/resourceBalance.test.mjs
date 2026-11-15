@@ -99,8 +99,8 @@ for (const [landing,method,power,siteId] of [
   r.send({type:'REVIEW_ICEBOUND_EXPEDITION_PLAN'})
   r.send({type:'CONFIRM_ICEBOUND_EXPEDITION_PLAN',revision:r.state.iceboundPlanning.revision})
   cmd({type:'EXECUTE_EXPEDITION'})
-  assert.equal(r.state.actionsRemaining,0)
-  const tooSoon=gameReducer(r.state,{type:'ICEBOUND_COMMAND',intent:{type:'COLLECT_SAMPLE',method:'subsurface-drilling'}})
+  assert.equal(r.state.actionsRemaining,1)
+  const tooSoon=gameReducer({...r.state,actionsRemaining:0},{type:'ICEBOUND_COMMAND',intent:{type:'COLLECT_SAMPLE',method:'subsurface-drilling'}})
   assert.equal(tooSoon.feedback.kind,'error');assert.deepEqual(tooSoon.resources,r.state.resources)
   r.send({type:'ADVANCE_SOL'});cmd({type:'COLLECT_SAMPLE',method:'subsurface-drilling'})
   const sampleId=r.state.icebound.samples[0].id

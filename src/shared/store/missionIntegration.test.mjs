@@ -151,9 +151,10 @@ test('outpost sol progression and action limits remain intact; completed Sol 10 
   const initialResources = state.resources
   state = gameReducer(state, { type: 'SPEND_ACTION_SLOT', actionId: 'sol-1-action-1', category: 'operation' })
   state = gameReducer(state, { type: 'SPEND_ACTION_SLOT', actionId: 'sol-1-action-2', category: 'repair' })
+  state = gameReducer(state, { type: 'SPEND_ACTION_SLOT', actionId: 'sol-1-action-3', category: 'exploration' })
   assert.equal(state.actionsRemaining, 0)
   assert.throws(() => gameReducer(state, {
-    type: 'SPEND_ACTION_SLOT', actionId: 'sol-1-action-3', category: 'exploration',
+    type: 'SPEND_ACTION_SLOT', actionId: 'sol-1-action-4', category: 'exploration',
   }), /no major actions remain/)
 
   for (let sol = 1; sol <= 10; sol += 1) state = gameReducer(maintainOutpost(state), { type: 'ADVANCE_SOL' })

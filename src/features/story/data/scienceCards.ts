@@ -1,6 +1,6 @@
 // GDD Part 2B T. E must verify scientific claims before release.
 export const scienceCards: Readonly<Record<string,string>> = {
-  gd_sol:'A sol is one Mars day. It is a little longer than an Earth day, about 24 hours 40 minutes.',
+  gd_sol:'A Mars Day is one day on Mars. It is a little longer than an Earth day, about 24 hours 40 minutes.',
   gd_delay:'Radio waves are fast, but Mars is far away. A one-way message takes about 3 to 22 minutes.',
   gd_solar:'Solar panels turn sunlight into power. Dust on the panels blocks some sunlight, so they make less power.',
   gd_air:'Air, water and food are separate supplies. The air machine and the water recycler help them last. (Game rule)',

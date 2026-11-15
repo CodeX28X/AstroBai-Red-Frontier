@@ -12,7 +12,7 @@ export { MAX_RESOURCE_VALUE } from './resourceEffects.ts'
 
 export const INITIAL_RESOURCES = SUPPLY_BALANCE.baseline
 
-export const MAX_ACTIONS_PER_SOL = 2
+export const MAX_ACTIONS_PER_SOL = 3
 
 export function getActionSlotCost(category: ActionCategory): 0 | 1 {
   switch (category) {
@@ -115,7 +115,7 @@ function reviewFeedbackMessage(state: GameState): string {
 
 function applyPreparationIntent(
   state: GameState,
-  intent: Extract<GameAction, { type: 'SET_EQUIPMENT_QUANTITY' | 'SET_SUPPLY_QUANTITY' | 'SET_SCIENCE_KIT' | 'REVIEW_MANIFEST' | 'CONFIRM_MANIFEST' }>,
+  intent: Extract<GameAction, { type: 'SET_RANDOMIZED_SUPPLIES' | 'SET_EQUIPMENT_QUANTITY' | 'SET_SUPPLY_QUANTITY' | 'SET_SCIENCE_KIT' | 'REVIEW_MANIFEST' | 'CONFIRM_MANIFEST' }>,
 ): GameState {
   if (state.phase !== 'preparation') {
     return withFeedback(state, 'Preparation can only be changed before launch.', 'error')
@@ -205,6 +205,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     case 'START_GAME':
       return applyMissionTransition(state, action)
 
+    case 'SET_RANDOMIZED_SUPPLIES':
     case 'SET_EQUIPMENT_QUANTITY':
     case 'SET_SUPPLY_QUANTITY':
     case 'SET_SCIENCE_KIT':
@@ -231,10 +232,10 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case 'ADVANCE_SOL': {
       if (isTerminal(state)) return reject(action, 'game is terminal')
-      if (state.phase !== 'outpost') return reject(action, 'sols can only advance during outpost gameplay')
+      if (state.phase !== 'outpost') return reject(action, 'Mars Days can only advance during outpost gameplay')
       if (state.completedSol >= state.actionLimits.maxSol) return reject(action, 'maximum sol reached')
-      if (action.expectedSol !== undefined && action.expectedSol !== state.sol) return reject(action, 'this sol has already advanced')
-      if (state.consumedSols.includes(state.sol)) return reject(action, 'this sol has already been consumed')
+      if (action.expectedSol !== undefined && action.expectedSol !== state.sol) return reject(action, 'this Mars Day has already advanced')
+      if (state.consumedSols.includes(state.sol)) return reject(action, 'this Mars Day has already been consumed')
       const daily = dailyResources(state.resources)
       if (!daily.allowed) return { ...state, outcome: 'failure', actionsRemaining:0, feedback: {kind:'success',code:'SUPPLY_FAILURE',message:'Not enough daily supplies. The mission has ended without a daily deduction.',feedbackId:'outpost.supply-failure'} }
       const failed = Object.values(daily.resources).some(value=>value===0)
@@ -247,7 +248,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         sol: failed ? state.sol : Math.min(state.sol + 1, state.actionLimits.maxSol),
         completedSol: state.sol,
         actionsRemaining: !failed && state.sol < state.actionLimits.maxSol ? state.actionLimits.maxActionsPerSol : 0,
-        feedback: {kind:'success',message:failed?'Daily supplies ran out. The mission has ended.':`Sol ${state.sol} complete. Daily use: ${dailyConsumptionDescription()}. ${resourceWarning(daily.resources)}`.trim(),feedbackId:'outpost.daily-consumption'},
+        feedback: {kind:'success',message:failed?'Daily supplies ran out. The mission has ended.':`Mars Day ${state.sol} complete. Daily use: ${dailyConsumptionDescription()}. ${resourceWarning(daily.resources)}`.trim(),feedbackId:'outpost.daily-consumption'},
       })
     }
 
@@ -260,7 +261,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const operation = OUTPOST_BALANCE.operations[action.operationId]
       return refreshIceboundStatus({ ...state, resources: result.resources, resourceRevision: state.resourceRevision+1,
         actionsRemaining: state.actionsRemaining-1, spentActionIds:[...state.spentActionIds,facilityOperationKey(state.sol,action.operationId)],
-        feedback:{kind:'success',code:'FACILITY_PRODUCED',message:`${operation.name}: +${result.resources[operation.resource]-state.resources[operation.resource]} ${operation.resource==='power'?'Energy':operation.resource}. One big job used.`,feedbackId:facilityOperationKey(state.sol,action.operationId)} })
+        feedback:{kind:'success',code:'FACILITY_PRODUCED',message:`${operation.name}: +${result.resources[operation.resource]-state.resources[operation.resource]} ${operation.resource==='power'?'Energy':operation.resource}. One Action used.`,feedbackId:facilityOperationKey(state.sol,action.operationId)} })
     }
 
     case 'SPEND_ACTION_SLOT': {
@@ -271,7 +272,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const actionId = action.actionId.trim()
       if (state.spentActionIds.includes(actionId)) return reject(action, 'action has already been completed')
       const cost = getActionSlotCost(action.category)
-      if (state.actionsRemaining < cost) return reject(action, 'no major actions remain this sol')
+      if (state.actionsRemaining < cost) return reject(action, 'no major actions remain this Mars Day')
       return refreshIceboundStatus({
         ...state,
         actionsRemaining: state.actionsRemaining - cost,

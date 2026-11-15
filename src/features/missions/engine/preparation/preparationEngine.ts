@@ -1,6 +1,7 @@
 import { EQUIPMENT_CATALOG } from '../../data/equipmentCatalog.ts'
 import { reviewMissionPlan } from './reviewMissionPlan.ts'
-import { emptySupplies, SCIENCE_KIT_IDS, SCIENCE_KIT_SPACE, SUPPLY_BALANCE, SUPPLY_ITEMS, supplySpace } from '../../data/supplyBalance.ts'
+import { emptySupplies, SCIENCE_KIT_IDS, SCIENCE_KIT_SPACE, SUPPLY_BALANCE, SUPPLY_ITEMS, supplySpace, validSupplies } from '../../data/supplyBalance.ts'
+import { randomSupplyMinimum } from './randomizeSupplies.ts'
 import { calculateManifestSummary } from './calculateManifestSummary.ts'
 import type {
   PreparationIntent,
@@ -137,6 +138,15 @@ export function preparationEngine(
   intent: PreparationIntent,
 ): PreparationResolution {
   switch (intent.type) {
+    case 'SET_RANDOMIZED_SUPPLIES': {
+      if (!state.supplies) return reject(state, 'INVALID_QUANTITY', 'Choose supplies for this mission first.')
+      if (state.status === 'confirmed') return reject(state, 'PREPARATION_CONFIRMED', 'The confirmed cargo list is locked.')
+      const minimum = randomSupplyMinimum()
+      if (!validSupplies(intent.supplies) || SUPPLY_ITEMS.some(({ id }) => intent.supplies[id] < minimum[id])) return reject(state, 'INVALID_QUANTITY', 'Choose a safe supply plan with enough of every resource.')
+      const mass = calculateManifestSummary(state.manifest, state.cargoCapacityUnits).totalCargoMassUnits + supplySpace(intent.supplies)
+      if (mass > state.cargoCapacityUnits) return reject(state, 'CAPACITY_EXCEEDED', 'Remove extra equipment to make room for this supply plan.')
+      return result({ ...state, supplies: { ...intent.supplies }, status: 'editing', revision: state.revision + 1, reviewedRevision: null, confirmedAtRevision: null, latestReview: null }, true, [], null)
+    }
     case 'SET_SUPPLY_QUANTITY': {
       if (!state.supplies) return reject(state, 'INVALID_QUANTITY', 'This mission uses the original equipment manifest.')
       if (state.status === 'confirmed') return reject(state, 'PREPARATION_CONFIRMED', 'The confirmed cargo list is locked.')

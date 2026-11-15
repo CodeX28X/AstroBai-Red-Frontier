@@ -93,6 +93,7 @@ export interface GameState {
 }
 
 export type GameAction =
+  | { type: 'SET_RANDOMIZED_SUPPLIES'; supplies: import('../../features/missions/types/preparation.ts').SupplySelection }
   | { type: 'OPERATE_FACILITY'; operationId: import('../../features/simulation/outpostSystems.ts').FacilityOperationId; expectedSol: number; expectedResourceRevision: number }
   | { type: 'SET_SUPPLY_QUANTITY'; supplyId: import('../../features/missions/types/preparation.ts').SupplyId; quantity: number }
   | { type: 'SET_SCIENCE_KIT'; packed: boolean }

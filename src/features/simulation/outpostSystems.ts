@@ -19,8 +19,8 @@ export function productionReadiness(state: GameState, operationId: FacilityOpera
   if (!operation) return { allowed: false, reason: 'Choose an available facility operation.' }
   const reason = state.phase !== 'outpost' || state.outcome || state.completedSol >= 10 ? 'Production needs an active outpost mission.' :
     state.facilities[operation.building] !== 'operational' ? 'This facility must be operational first.' :
-    state.actionsRemaining < 1 ? 'No big jobs left. Rest to get two more tomorrow.' :
-    state.spentActionIds.includes(facilityOperationKey(state.sol, operationId)) ? 'This facility job is already done for this sol.' :
+    state.actionsRemaining < 1 ? 'No Actions left. Try the next Mars Day for three more Actions.' :
+    state.spentActionIds.includes(facilityOperationKey(state.sol, operationId)) ? 'This facility job is already done for this Mars Day.' :
     state.resources[operation.resource] >= MAX_RESOURCE_VALUE ? 'This resource is already full.' :
     state.resources.power < operation.powerCost ? 'Collect energy at the solar array first.' : undefined
   return { allowed: !reason, reason }
@@ -39,7 +39,7 @@ export function dailyResources(resources: Resources) {
 }
 export function resourceWarning(resources: Resources) {
   const low=RESOURCE_KEYS.filter(key=>resources[key]<=2)
-  return low.length ? `Low ${low.map(key=>key==='power'?'Energy':key).join(', ')}. Use facility jobs before ending the sol.` : ''
+  return low.length ? `Low ${low.map(key=>key==='power'?'Energy':key).join(', ')}. Use facility jobs before ending the Mars Day.` : ''
 }
 export function dailyConsumptionDescription() {
   return Object.entries(OUTPOST_BALANCE.dailyConsumption).map(([key,amount])=>`${amount} ${key==='power'?'Energy':key[0].toUpperCase()+key.slice(1)}`).join(', ')

@@ -4,7 +4,7 @@ import { createInitialGameState, gameReducer } from './gameReducer.ts'
 export const SAVE_KEY = 'astrobai.adventure.save.v1'
 export const SAVE_VERSION = 4
 export type SavedCampaign = 'classic' | 'supplies'
-const supported = new Set(['OPERATE_FACILITY','START_GAME','ADVANCE_SOL','SET_EQUIPMENT_QUANTITY','SET_SUPPLY_QUANTITY','SET_SCIENCE_KIT','INSPECT_LOCATION','ACKNOWLEDGE_DIALOGUE','REVIEW_MANIFEST','CONFIRM_MANIFEST','BEGIN_LAUNCH','COMPLETE_LAUNCH','SELECT_LANDING_SITE','ENTER_DEBRIEF','SET_ICEBOUND_EXPEDITION_PLAN','REVIEW_ICEBOUND_EXPEDITION_PLAN','CONFIRM_ICEBOUND_EXPEDITION_PLAN','ICEBOUND_COMMAND'])
+const supported = new Set(['SET_RANDOMIZED_SUPPLIES','OPERATE_FACILITY','START_GAME','ADVANCE_SOL','SET_EQUIPMENT_QUANTITY','SET_SUPPLY_QUANTITY','SET_SCIENCE_KIT','INSPECT_LOCATION','ACKNOWLEDGE_DIALOGUE','REVIEW_MANIFEST','CONFIRM_MANIFEST','BEGIN_LAUNCH','COMPLETE_LAUNCH','SELECT_LANDING_SITE','ENTER_DEBRIEF','SET_ICEBOUND_EXPEDITION_PLAN','REVIEW_ICEBOUND_EXPEDITION_PLAN','CONFIRM_ICEBOUND_EXPEDITION_PLAN','ICEBOUND_COMMAND'])
 export function encodeSave(actions: readonly GameAction[], campaign: SavedCampaign = 'supplies'): string { return JSON.stringify({ version: SAVE_VERSION, campaign, actions }) }
 export function decodeSave(raw: string): { state: GameState; actions: GameAction[]; campaign: SavedCampaign } {
   if (raw.length > 1_000_000) throw new Error('Save is too large.')

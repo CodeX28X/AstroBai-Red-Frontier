@@ -54,7 +54,7 @@ export type MissionProgressionResolution =
       debrief: DebriefEvaluation | null
     }
 
-/** Explicit terminal outcomes take priority; surviving through completed Sol 10 is MVP success. */
+/** Explicit terminal outcomes take priority; surviving through completed Mars Day 10 is MVP success. */
 export function evaluateDebrief(context: MissionProgressionContext): DebriefEvaluation | null {
   if (context.outcome !== null) return { outcome: context.outcome, reason: 'terminal-outcome' }
   if (Number.isInteger(context.completedSol) && context.completedSol >= 10) {
@@ -122,7 +122,7 @@ export function validateMissionTransition(
 
   const debrief = intent.type === 'ENTER_DEBRIEF' ? evaluateDebrief(context) : null
   if (intent.type === 'ENTER_DEBRIEF' && debrief === null) {
-    return reject('DEBRIEF_NOT_READY', 'Complete Sol 10 or reach a terminal mission outcome before debrief.')
+    return reject('DEBRIEF_NOT_READY', 'Complete Mars Day 10 or reach a terminal mission outcome before debrief.')
   }
   return {
     allowed: true, code: 'TRANSITION_ALLOWED', message, nextPhase, completionMarker,

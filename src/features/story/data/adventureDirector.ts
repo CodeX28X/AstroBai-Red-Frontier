@@ -7,6 +7,7 @@ import type { EvidenceClassification } from '../../missions/types/icebound.ts'
 import { currentSamples, currentAnalyses } from '../../missions/engine/icebound/siteProgress.ts'
 import { CHARACTERS } from './characters.ts'
 import { SUPPLY_BALANCE } from '../../missions/data/supplyBalance.ts'
+import { actionHelp, lowResourceWarnings } from './actionFeedback.ts'
 export { CHARACTERS } from './characters.ts'
 
 export const RESULT_LABELS: Record<EvidenceClassification, string> = {
@@ -32,30 +33,30 @@ export function evaReadiness(state: GameState) {
 }
 export function adventureDirector(state: GameState): AdventureGuide {
   const base = { id: `sol-${state.sol}`, objectiveId: 'outpost.explore' }
-  if (state.outcome || state.completedSol === 10) return guide({ ...base, speakerId: 'kiki', title: 'Our mission story', text: state.outcome === 'failure' ? 'The mission pauses here. Let’s learn and try again.' : 'Ten sols of teamwork! Let’s share what we learned.', actionLabel: 'Mission debrief', endSol: true })
+  if (state.outcome || state.completedSol === 10) return guide({ ...base, speakerId: 'kiki', title: 'Our mission story', text: state.outcome === 'failure' ? 'The mission pauses here. Let’s learn and try again.' : 'Ten Mars Days of teamwork! Let’s share what we learned.', actionLabel: 'Mission debrief', endSol: true })
   const inspected = (location: string) => state.guidance.inspections.includes(`${state.sol}:${location}`)
-  const lowest = (['oxygen','water','food','power'] as const).find(id => state.resources[id] < (state.preparation.supplies ? SUPPLY_BALANCE.statusBands.needsHelpBelow : 20))
-  if (lowest && !inspected(lowest === 'power' ? 'energy' : 'supplies')) return guide({ ...base, id: `safety.${state.sol}.${lowest}`, speakerId: 'bai', title: `${lowest === 'power' ? 'Energy' : lowest[0].toUpperCase()+lowest.slice(1)} needs attention`, text: 'Our reserve is low. Let’s check before choosing more work.', actionLabel: lowest === 'power' ? 'Check energy' : 'Check crew supplies', panel: lowest === 'power' ? 'energy' : 'supplies', highlight: lowest === 'power' ? 'energy' : 'supplies', recovery: 'Use the solar array for Energy, habitat for air or water, and greenhouse for Food before ending the sol.' })
+  const warning = lowResourceWarnings(state)[0], lowest = warning?.id
+  if (lowest && !inspected(lowest === 'power' ? 'energy' : 'supplies')) return guide({ ...base, id: `safety.${state.sol}.${lowest}`, speakerId: 'bai', title: `${lowest === 'power' ? 'Energy' : lowest[0].toUpperCase()+lowest.slice(1)} needs attention`, text: `${warning.message} ${warning.recovery}`, actionLabel: lowest === 'power' ? 'Check energy' : 'Check crew supplies', panel: lowest === 'power' ? 'energy' : 'supplies', highlight: lowest === 'power' ? 'energy' : 'supplies', recovery: warning.recovery })
   if (state.sol === 1) {
     if (!inspected('habitat')) return guide({ ...base, id: 'outpost.sol1.habitat', speakerId: 'bai', title: 'Welcome to your Mars home', text: 'Welcome to Mars! Let’s check our new home.', actionLabel: 'Explore the habitat', target: 'habitat' })
     if (!inspected('solar-array')) return guide({ ...base, id: 'outpost.sol1.array', speakerId: 'bai', title: 'Our machines need energy', text: 'This home keeps our crew safe. Now tap the solar array!', actionLabel: 'Inspect solar array', target: 'solar-array' })
     if (!inspected('energy')) return guide({ ...base, id: 'outpost.sol1.energy', speakerId: 'bai', title: 'Check our energy reserve', text: 'Our starter grid is ready. Let’s check the energy for science.', actionLabel: 'Check energy', panel: 'energy', highlight: 'energy' })
-    return guide({ ...base, id: 'outpost.sol1.ready', speakerId: 'bai', title: 'Ready for our first day', text: 'Our home and energy are checked. Explore or start tomorrow!', actionLabel: 'Next sol', endSol: true })
+    return guide({ ...base, id: 'outpost.sol1.ready', speakerId: 'bai', title: 'Ready for our first day', text: 'Our home and energy are checked. Explore or start tomorrow!', actionLabel: 'Next Mars Day', endSol: true })
   }
   if (state.sol === 2) {
     const damaged = state.facilities['solar-array'] === 'damaged' || state.iceboundReadiness.deployedEquipment.some(e => e.equipmentId === 'folding-solar-array' && e.status === 'damaged')
     if (!inspected('solar-array')) return guide({ ...base, id: `outpost.sol2.${damaged ? 'damaged' : 'check'}`, speakerId: 'menemo', title: damaged ? 'Our solar array needs care' : 'Follow the energy', text: damaged ? 'The array needs care. Let’s inspect it and check our reserve.' : 'Our starter grid is working. Let’s look at our equipment.', actionLabel: 'Inspect solar array', target: 'solar-array' })
     if (!inspected('energy')) return guide({ ...base, id: 'outpost.sol2.energy', speakerId: 'bai', title: 'Watch the energy we use', text: 'Every science job uses energy. Check what we have left.', actionLabel: 'Check energy', panel: 'energy', highlight: 'energy' })
-    return guide({ ...base, id: 'outpost.sol2.ready', speakerId: 'bai', title: 'Ready to look for clues', text: 'Tomorrow, Scout can help us investigate hidden ice.', actionLabel: 'Next sol', endSol: true })
+    return guide({ ...base, id: 'outpost.sol2.ready', speakerId: 'bai', title: 'Ready to look for clues', text: 'Tomorrow, Scout can help us investigate hidden ice.', actionLabel: 'Next Mars Day', endSol: true })
   }
   if (state.sol === 4 && !inspected('supplies')) return guide({ ...base, id: 'outpost.sol4.supplies', speakerId: 'bai', title: 'Keep our crew supplied', text: state.facilities.habitat === 'operational' && state.missions['life-support'] !== 'active' ? 'Our crew needs air, water and food. Let’s check our reserves.' : 'Our habitat needs attention. Stay inside and check crew supplies.', actionLabel: 'Check crew supplies', panel: 'supplies', highlight: 'supplies' })
   const mission = state.icebound
   if (mission.report) {
     if (state.sol === 6) return guide({ ...base, id: 'sol-6-science', speakerId: 'olef', title: 'Keep an eye on the Sun', text: 'Space weather can affect explorers. Learn how scientists watch the Sun.', actionLabel: 'Explore space weather', panel: 'science' })
-    if (state.sol === 10) return guide({ ...base, id: 'sol-10-check', speakerId: 'kiki', title: 'One last outpost check', text: 'Check our supplies. Then finish Sol 10 and share our story.', actionLabel: 'Check supplies', panel: 'supplies', target: 'habitat' })
-    return guide({ ...base, id: 'icebound-complete', objectiveId: 'icebound.science-report', speakerId: 'kofi', title: RESULT_LABELS[mission.report.conclusion ?? 'analysis-incomplete'], text: state.sol === 9 ? 'Our findings are ready. Let’s review what we learned.' : 'Our findings are recorded. Explore, then finish our ten sols.', actionLabel: 'Read our findings', panel: 'report' })
+    if (state.sol === 10) return guide({ ...base, id: 'sol-10-check', speakerId: 'kiki', title: 'One last outpost check', text: 'Check our supplies. Then finish Mars Day 10 and share our story.', actionLabel: 'Check supplies', panel: 'supplies', target: 'habitat' })
+    return guide({ ...base, id: 'icebound-complete', objectiveId: 'icebound.science-report', speakerId: 'kofi', title: RESULT_LABELS[mission.report.conclusion ?? 'analysis-incomplete'], text: state.sol === 9 ? 'Our findings are ready. Let’s review what we learned.' : 'Our findings are recorded. Explore, then finish our ten Mars Days.', actionLabel: 'Read our findings', panel: 'report' })
   }
-  if (state.actionsRemaining === 0 && !currentAnalyses(mission).length) return guide({ ...base, speakerId: 'olef', title: 'Time to rest', text: 'Today’s big jobs are done. Let’s start a fresh sol.', actionLabel: state.sol === 10 ? 'Finish Sol 10' : 'Rest until next sol', endSol: true })
+  if (state.actionsRemaining === 0 && !currentAnalyses(mission).length) return guide({ ...base, speakerId: 'olef', title: 'Time to rest', text: 'Today’s Actions are done. Let’s start a fresh Mars Day.', actionLabel: state.sol === 10 ? 'Finish Mars Day 10' : 'Rest until next Mars Day', endSol: true })
   let command: IceboundRuntimeIntent | undefined, title = '', text = '', actionLabel = '', panel: AdventureGuide['panel'], target: AdventureGuide['target'], animationCue: AdventureGuide['animationCue']
   const has = (id: string) => mission.completedObjectives.some(o => o === id)
   let objectiveId = 'icebound.recon'
@@ -68,7 +69,7 @@ export function adventureDirector(state: GameState): AdventureGuide {
   else { target = 'research-lab'; objectiveId = 'icebound.science-report'; command = { type: 'GENERATE_REPORT' }; title = RESULT_LABELS[currentAnalyses(mission)[0].classification]; text = 'Every honest result helps. Let’s record our findings.'; actionLabel = 'Record science report' }
   const proposal = command ? iceboundEngine(selectIceboundContext(state), command) : null
   const blockedReason = proposal && !proposal.allowed ? proposal.reason : undefined
-  return guide({ id: `${objectiveId}:${mission.revision}`, objectiveId, speakerId: 'kofi', title, text, actionLabel, panel, command, target, animationCue, blockedReason, highlight: objectiveId === 'icebound.recon' ? 'scout' : undefined, recovery: blockedReason ? /action slots/.test(blockedReason) ? 'Start the next sol to get fresh jobs.' : /power|supply|supplies/.test(blockedReason) ? 'Check reserves and compare a lower-cost plan. Science is optional.' : 'Check your packed science tools. Missing cargo needs a new mission.' : undefined })
+  return guide({ id: `${objectiveId}:${mission.revision}`, objectiveId, speakerId: 'kofi', title, text, actionLabel, panel, command, target, animationCue, blockedReason, highlight: objectiveId === 'icebound.recon' ? 'scout' : undefined, recovery: blockedReason ? actionHelp(blockedReason,state).next : undefined })
 }
 export function statusGroups(state: GameState) {
   const r = state.resources, safety = evaReadiness(state)

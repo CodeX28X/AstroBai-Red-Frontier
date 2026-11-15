@@ -1,5 +1,15 @@
 ﻿# Integration contract
 
+## Child-friendly interactions — 2026-11-15
+
+The supplied request authorizes three Actions per Mars Day, randomized preparation, and presentation/accessibility improvements. C remains the sole gameplay writer; D's existing readiness, mission and science engines remain authoritative. A/B render those validations and navigate without completing objectives. No new simulator, repair system, mission store, or scientific classification is introduced. This records the user-authorized contract before implementation; independent owner review remains required before merge.
+
+- `SET_RANDOMIZED_SUPPLIES { supplies: SupplySelection }` is an atomic preparation edit. A pure D-owned generator accepts PreparationState and injectable randomness, respects packed cargo and existing balancing configuration. The engine validates the selection, invalidates review, and never confirms it. Saves journal quantities rather than randomness.
+- Existing MAX_ACTIONS_PER_SOL becomes 3. Costs and daily consumption do not change. Version 4 journals remain replayable: paid work and resources are retained, with one additional unused Action per active day. Scene transitions never refill Actions.
+- A owns reusable accessible blocked-action feedback, state-derived warnings, optional local Web Speech playback, guidance overlays and outcome explanations. UI-only guide completion uses existing persisted dialogue acknowledgments and awards no progress. Speech is opt-in and cancelled on line/scene/dialog changes.
+- B exposes a presentation-only facility-card render slot and highlighted research site. Cards consume A callbacks with real production validated again by C. Mission-log navigation requests never carry mission commands; collision/pathfinding stays authoritative. Gait changes only sprite offsets, not ground coordinates or speed.
+- Shared asset references use documented supplied slots and PixelImage fallbacks. NASA/scientific engines are unchanged. E-owned QA covers engine invariants, save replay, layout, input, missing images, speech lifecycle and honest endings/science states.
+
 ## Pixel assets and presentation — 2026-11-15
 
 This request changes presentation/navigation only. Shared asset definitions and a reusable image fallback component feed A/B surfaces; resource and equipment identifiers remain existing domain IDs. Five supplied PNG portraits replace their labeled SVG placeholders; Scout/Earth keep matching placeholders. Four supplied resource PNGs are used throughout presentation with existing supply SVG fallbacks. No equipment art is present, so no filenames/items are invented. B aligns building ground collision footprints with the drawn pads, retains the solid flag platform and other obstacles, shares facility approach points, rejects disconnected starts, and raises configured travel speed/cadence by 25%. A adds compact objective/warning access in both HUD modes and a summary-first ending derived from actual outcome/completed sols/resources/science, with existing reports optional. C/D simulation, save schema, progression, scientific findings and all balancing remain unchanged. QA covers actual normal-motion road crossings and resized layouts. This records interfaces and scope; it does not claim independent owner review.
@@ -77,7 +87,7 @@ Changes to `GameState`, `GameAction`, and the shared reducer require Developer C
 
 ## Action-slot tracking
 
-The outpost has two major-action slots per Sol. `actionsRemaining` starts at two and resets to two only when `ADVANCE_SOL` succeeds. Major action categories are operation, repair, event response, and exploration; a valid `SPEND_ACTION_SLOT` in the outpost consumes one slot. Rejected actions and duplicate action IDs consume none. Facility inspection and power allocation are free and have zero slot cost. The reducer records spent action IDs for duplicate protection.
+The outpost has three Action slots per Mars Day. `actionsRemaining` starts at three and resets to three only when `ADVANCE_SOL` succeeds. Major action categories are operation, repair, event response, and exploration; a valid `SPEND_ACTION_SLOT` in the outpost consumes one slot. Rejected actions and duplicate action IDs consume none. Facility inspection and power allocation are free and have zero slot cost. The reducer records spent action IDs for duplicate protection.
 
 This action-slot slice does not implement resource calculations, facility effects, or power allocation behavior. Those remain blocked on the team's approved balance table and power-state contract.
 

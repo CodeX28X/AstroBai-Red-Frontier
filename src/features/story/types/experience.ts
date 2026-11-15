@@ -17,7 +17,7 @@ export interface ExperienceView {
   readonly sol: number
   readonly todayGoal?: string
   readonly chapter: 1 | 2 | 3 | 4 | 5
-  readonly jobs: readonly { readonly label: 'Big job' | 'Helper job'; readonly available: boolean }[]
+  readonly jobs: readonly { readonly label: 'Action 1' | 'Action 2' | 'Action 3'; readonly available: boolean }[]
   readonly hasSave: boolean
   readonly saveNotice?: { readonly id: 'save_ok' | 'save_corrupt' | 'save_old'; readonly sol?: number }
   readonly tokens: Readonly<Record<string, string | number>>
